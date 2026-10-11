@@ -117,11 +117,3 @@ Javadoc. Os principais (os três pedidos na divisão do grupo estão em negrito)
 - `MapaOficialTest` — invariantes do mapa: 9 cidades (3/região), 7
   conselheiros, rotas simétricas, mapa conexo a partir de Karakorum, 4
   províncias do Khan com 2 vizinhas e 1 tributo inicial em cada província.
-
-## Entrega
-
-O EAD pede um **ZIP do projeto Eclipse** até 23h59 do fim de cada iteração:
-
-```bash
-git archive --format=zip -o ../HerdeirosDeKhan-iteracao1.zip HEAD
-```
