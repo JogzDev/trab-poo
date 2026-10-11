@@ -82,7 +82,7 @@ public class MapaOficialTest {
 	}
 
 	/**
-	 * Objetivo: o mapa é conexo — partindo de Karakorum (onde todos os peões
+	 * Objetivo: o mapa é conexo: partindo de Karakorum (onde todos os peões
 	 * começam) é possível chegar a qualquer parada por rotas.
 	 */
 	@Test

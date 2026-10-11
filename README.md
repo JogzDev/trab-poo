@@ -1,4 +1,4 @@
-# Herdeiros de Khan — Trabalho de INF1636 (POO)
+# Herdeiros de Khan: Trabalho de INF1636 (POO)
 
 Projeto Eclipse em Java do jogo **Herdeiros de Khan**, organizado em MVC.
 Esta é a **1ª iteração** (28/09 → 11/10/2026): só o componente **Model**, sem
@@ -69,7 +69,7 @@ alterar o que existe.
 
 ## ⚠️ Mapa: o que precisa ser conferido com o tabuleiro físico
 
-`MapaOficial` foi transcrito do manual escaneado (pp. 4–5), onde a rede de rotas
+`MapaOficial` foi transcrito do manual escaneado (pp. 4 a 5), onde a rede de rotas
 aparece pequena. Está **confirmado**: 3 regiões; 9 cidades (3 por região);
 7 conselheiros (6 paradas duplas + Karakorum); 4 províncias do Khan.
 É **aproximação**: quantas paradas há em cada anel de cidade, quais rotas ligam
@@ -103,17 +103,17 @@ Resultado atual: 29 testes, todos passando.
 Cada caso de teste documenta **Objetivo / Entrada / Saída esperada** no
 Javadoc. Os principais (os três pedidos na divisão do grupo estão em negrito):
 
-- `TabuleiroTest` — **vizinhança correta** (rota simétrica, não-vizinhas a dois
+- `TabuleiroTest`: **vizinhança correta** (rota simétrica, não-vizinhas a dois
   passos, parada inexistente), **"dono muda"** (construir yurt retira do estoque
   e marca a parada; capacidade 1/2/0 por tipo de parada; remoção devolve ao
   estoque), **maioria na região** (empate no 1º lugar, 2º lugar, yurt de
   conquista de cidade contando para a região), movimento de peões (só vizinha,
   capacidade de peões, peões de Altani não se bloqueiam), adjacência de cidades e
   províncias.
-- `CidadeProvinciaTest` — revelar/atacar/conquistar cidade; máximo de 3 peças
+- `CidadeProvinciaTest`: revelar/atacar/conquistar cidade; máximo de 3 peças
   por província; setas do Khan só em províncias do Khan.
-- `JogadorTest` — preparação inicial; peças de ativação; gasto de tributo
+- `JogadorTest`: preparação inicial; peças de ativação; gasto de tributo
   insuficiente; coerência das colunas transcritas das cartelas.
-- `MapaOficialTest` — invariantes do mapa: 9 cidades (3/região), 7
+- `MapaOficialTest`: invariantes do mapa: 9 cidades (3/região), 7
   conselheiros, rotas simétricas, mapa conexo a partir de Karakorum, 4
   províncias do Khan com 2 vizinhas e 1 tributo inicial em cada província.

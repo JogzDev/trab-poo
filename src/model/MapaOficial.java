@@ -3,7 +3,7 @@ package model;
 /**
  * Monta o Tabuleiro com o mapa do jogo físico.
  *
- * ATENÇÃO — dados a validar com o tabuleiro físico. Este mapa foi
+ * ATENÇÃO: dados a validar com o tabuleiro físico. Este mapa foi
  * transcrito do manual escaneado (Regas.pdf, pp. 4 e 5), onde a rede de rotas
  * aparece pequena e borrada. O que está confirmado pelo manual:
  *
@@ -19,7 +19,7 @@ package model;
  * O que é aproximação e deve ser conferido olhando o tabuleiro de verdade:
  * o número exato de paradas em cada anel, quais rotas ligam os anéis, e a
  * localização/tipo de tributo de cada província. Para corrigir, basta editar as
- * listas abaixo — nenhuma outra classe depende desses nomes.
+ * listas abaixo: nenhuma outra classe depende desses nomes.
  *
  * Convenção de nomes das paradas sem nome no jogo: "<Cidade> Norte/
  * Sul/Leste/Oeste" para as paradas do anel da cidade; "Conselheiro <posição>"
@@ -118,7 +118,7 @@ final class MapaOficial {
 		t.ligar(CONSELHEIRO_LESTE, "Pequim Leste");
 		t.ligar("Pequim Sul", "Cantão Norte");
 		t.ligar("Cantão Norte", "Kaesong Sul");
-		// Karakorum (centro) — rotas para as quatro direções
+		// Karakorum (centro): rotas para as quatro direções
 		t.ligar(KARAKORUM, "Moscou Sul");
 		t.ligar(KARAKORUM, "Sarai Sul");
 		t.ligar(KARAKORUM, "Samarcanda Leste");

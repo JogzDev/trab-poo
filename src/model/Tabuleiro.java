@@ -378,7 +378,7 @@ class Tabuleiro {
 
 	// =============================================================== peões
 
-	/** Coloca (ou recoloca) um peão numa parada sem verificar rotas — uso na preparação. */
+	/** Coloca (ou recoloca) um peão numa parada sem verificar rotas: uso na preparação. */
 	void posicionarPeao(Peao peao, Parada p) {
 		exigirRegistrada(p);
 		posicaoDosPeoes.put(peao, p);

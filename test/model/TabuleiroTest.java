@@ -51,7 +51,7 @@ public class TabuleiroTest {
 
 	/**
 	 * Objetivo: verificar que uma rota criada com ligar(a, b) é simétrica.
-	 * Entrada: rota A–B.
+	 * Entrada: rota A-B.
 	 * Saída esperada: saoVizinhas(A,B) e saoVizinhas(B,A) são verdadeiros.
 	 */
 	@Test
@@ -259,7 +259,7 @@ public class TabuleiroTest {
 	/**
 	 * Objetivo: não se pode terminar o movimento numa parada simples ocupada
 	 * por outro jogador, mas pode numa dupla (2 peões) ou em Karakorum
-	 * (todos) — manual, p. 7.
+	 * (todos): manual, p. 7.
 	 * Entrada: peão verde em B, em C e em K; peão azul tenta terminar em cada.
 	 * Saída esperada: B recusa; C aceita; K aceita mesmo com 2 ocupantes.
 	 */
