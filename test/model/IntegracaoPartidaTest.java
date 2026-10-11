@@ -1,8 +1,9 @@
 package model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -29,9 +30,11 @@ public class IntegracaoPartidaTest {
 		componentes.cartaQuatroEspadas = true;
 		c.iniciar(componentes);
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.AMARELA), "ativar melhoria antiga");
-		assertEquals("A ativação deve chamar a parte 2 depois de disponibilizar os recursos virtuais",
-				Arrays.asList(3, 3, 1, 1, 1), Arrays.asList(c.partida.getTurno().getCavalos(), c.partida.getTurno().getMaos(),
-						c.partida.getTurno().getRecursoVirtual(TipoTributo.ESPADA), c.azul().getVotos(), componentes.avaliacoes));
+		assertEquals("Cavalos restantes no turno", 3, c.partida.getTurno().getCavalos());
+		assertEquals("Mãos restantes no turno", 3, c.partida.getTurno().getMaos());
+		assertEquals("Espadas virtuais restantes no turno", 1, c.partida.getTurno().getRecursoVirtual(TipoTributo.ESPADA));
+		assertEquals("Votos de Azul", 1, c.azul().getVotos());
+		assertEquals("Chamadas ao hook de cartas", 1, componentes.avaliacoes);
 	}
 
 	/**
@@ -45,10 +48,10 @@ public class IntegracaoPartidaTest {
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.VERDE), "moeda virtual de Chagatai");
 		PartidaTest.exigir(c.partida.getTurno().getRecursoVirtual(TipoTributo.MOEDA) == 1, "virtual disponível no turno azul");
 		PartidaTest.exigir(c.partida.terminarTurno(), "trocar de jogador");
-		assertEquals("A moeda virtual expira e não aumenta o saldo físico de ninguém",
-				Arrays.asList(c.jogadores.get(1), 0, 1, 1), Arrays.asList(c.partida.getJogadorDaVez(),
-						c.partida.getTurno().getRecursoVirtual(TipoTributo.MOEDA), c.azul().contarTributo(TipoTributo.MOEDA),
-						c.jogadores.get(1).contarTributo(TipoTributo.MOEDA)));
+		assertEquals("Jogador da vez", c.jogadores.get(1), c.partida.getJogadorDaVez());
+		assertEquals("Moedas virtuais restantes no turno", 0, c.partida.getTurno().getRecursoVirtual(TipoTributo.MOEDA));
+		assertEquals("Moedas físicas de Azul", 1, c.azul().contarTributo(TipoTributo.MOEDA));
+		assertEquals("Moedas físicas de Vermelho", 1, c.jogadores.get(1).contarTributo(TipoTributo.MOEDA));
 	}
 
 	/**
@@ -60,10 +63,11 @@ public class IntegracaoPartidaTest {
 	public void pagamentoUsaVirtualPrimeiroSemCriarPecaNoBanco() {
 		PartidaTest.Cenario c = PartidaTest.padrao().iniciar();
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.VERDE), "moeda virtual");
-		assertEquals("Usar moeda virtual não devolve uma moeda física ao banco",
-				Arrays.asList(true, 0, 1, 11), Arrays.asList(c.partida.gastarTributo(TipoTributo.MOEDA, 1),
-						c.partida.getTurno().getRecursoVirtual(TipoTributo.MOEDA), c.azul().contarTributo(TipoTributo.MOEDA),
-						c.partida.getEstoque(TipoTributo.MOEDA)));
+		boolean resultadoDeGastarTributo = c.partida.gastarTributo(TipoTributo.MOEDA, 1);
+		assertTrue("O pagamento deve ser aceito com recursos suficientes", resultadoDeGastarTributo);
+		assertEquals("Moedas virtuais restantes no turno", 0, c.partida.getTurno().getRecursoVirtual(TipoTributo.MOEDA));
+		assertEquals("Moedas físicas de Azul", 1, c.azul().contarTributo(TipoTributo.MOEDA));
+		assertEquals("Estoque físico de moedas no banco", 11, c.partida.getEstoque(TipoTributo.MOEDA));
 	}
 
 	/**
@@ -75,10 +79,11 @@ public class IntegracaoPartidaTest {
 	public void pagamentoInsuficientePreservaRecursosFisicosEVirtuais() {
 		PartidaTest.Cenario c = PartidaTest.padrao().iniciar();
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.VERDE), "moeda virtual");
-		assertEquals("A validação deve preceder o consumo de qualquer recurso",
-				Arrays.asList(false, 1, 1, 11), Arrays.asList(c.partida.gastarTributo(TipoTributo.MOEDA, 3),
-						c.partida.getTurno().getRecursoVirtual(TipoTributo.MOEDA), c.azul().contarTributo(TipoTributo.MOEDA),
-						c.partida.getEstoque(TipoTributo.MOEDA)));
+		boolean resultadoDeGastarTributo = c.partida.gastarTributo(TipoTributo.MOEDA, 3);
+		assertFalse("O pagamento deve ser recusado sem consumir recursos", resultadoDeGastarTributo);
+		assertEquals("Moedas virtuais restantes no turno", 1, c.partida.getTurno().getRecursoVirtual(TipoTributo.MOEDA));
+		assertEquals("Moedas físicas de Azul", 1, c.azul().contarTributo(TipoTributo.MOEDA));
+		assertEquals("Estoque físico de moedas no banco", 11, c.partida.getEstoque(TipoTributo.MOEDA));
 	}
 
 	/**
@@ -93,9 +98,11 @@ public class IntegracaoPartidaTest {
 		componentes.escolhaPendente = true;
 		c.iniciar(componentes);
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.AMARELA), "coluna sem Khan");
-		assertEquals("Uma escolha obrigatória impede passar a vez",
-				Arrays.asList(false, c.azul(), 1, Fase.EM_ANDAMENTO), Arrays.asList(c.partida.terminarTurno(),
-						c.partida.getJogadorDaVez(), c.partida.getTurno().getNumero(), c.partida.getFase()));
+		boolean resultadoDeTerminarTurno = c.partida.terminarTurno();
+		assertFalse("A escolha obrigatória da parte 2 deve impedir encerrar o turno", resultadoDeTerminarTurno);
+		assertEquals("Jogador da vez", c.azul(), c.partida.getJogadorDaVez());
+		assertEquals("Número do turno corrente", 1, c.partida.getTurno().getNumero());
+		assertEquals("Fase da partida", Fase.EM_ANDAMENTO, c.partida.getFase());
 	}
 
 	/**
@@ -118,10 +125,17 @@ public class IntegracaoPartidaTest {
 		PartidaTest.turnoVazio(c.partida);
 		Fase antesDoUltimo = c.partida.getFase();
 		PartidaTest.turnoVazio(c.partida);
-		assertEquals("O jogo deve aguardar o último jogador da rodada final e pontuar uma única vez",
-				Arrays.asList(Fase.EM_ANDAMENTO, Fase.ENCERRADA, 2, 1, false, false),
-				Arrays.asList(antesDoUltimo, c.partida.getFase(), c.partida.getRodada(), componentes.pontuacoes,
-						c.partida.terminarTurno(), c.partida.ativarColuna(Coluna.BRANCA)));
+		Fase faseEncerrada = c.partida.getFase();
+		int rodadaEncerrada = c.partida.getRodada();
+		int pontuacoesAoEncerrar = componentes.pontuacoes;
+		boolean resultadoDeTerminarTurno = c.partida.terminarTurno();
+		boolean resultadoDeAtivarColuna = c.partida.ativarColuna(Coluna.BRANCA);
+		assertEquals("Fase antes do último jogador da rodada final", Fase.EM_ANDAMENTO, antesDoUltimo);
+		assertEquals("Fase da partida", Fase.ENCERRADA, faseEncerrada);
+		assertEquals("Rodada corrente", 2, rodadaEncerrada);
+		assertEquals("Chamadas à pontuação final", 1, pontuacoesAoEncerrar);
+		assertFalse("Uma partida encerrada não deve aceitar outra tentativa de terminar o turno", resultadoDeTerminarTurno);
+		assertFalse("Uma partida encerrada não deve aceitar ativação da coluna branca", resultadoDeAtivarColuna);
 	}
 
 	/**
@@ -142,9 +156,10 @@ public class IntegracaoPartidaTest {
 		PartidaTest.turnoVazio(c.partida);
 		Fase antesDoUltimo = c.partida.getFase();
 		PartidaTest.turnoVazio(c.partida);
-		assertEquals("O disparo no fim da rodada não elimina a rodada completa seguinte",
-				Arrays.asList(2, Fase.EM_ANDAMENTO, Fase.ENCERRADA, 1),
-				Arrays.asList(c.partida.getRodadaFinal(), antesDoUltimo, c.partida.getFase(), componentes.pontuacoes));
+		assertEquals("Rodada final agendada", 2, c.partida.getRodadaFinal());
+		assertEquals("Fase antes do último jogador da rodada final", Fase.EM_ANDAMENTO, antesDoUltimo);
+		assertEquals("Fase da partida", Fase.ENCERRADA, c.partida.getFase());
+		assertEquals("Chamadas à pontuação final", 1, componentes.pontuacoes);
 	}
 
 	/**
@@ -157,8 +172,9 @@ public class IntegracaoPartidaTest {
 		PartidaTest.Cenario c = new PartidaTest.Cenario(false, Herdeiro.CHAGATAI, Herdeiro.OGEDEI).iniciar();
 		PartidaTest.turnoVazio(c.partida);
 		PartidaTest.turnoVazio(c.partida);
-		assertEquals("O conjunto vazio de cidades não deve encerrar a partida de teste",
-				Arrays.asList(Fase.EM_ANDAMENTO, -1, 2), Arrays.asList(c.partida.getFase(), c.partida.getRodadaFinal(), c.partida.getRodada()));
+		assertEquals("Fase da partida", Fase.EM_ANDAMENTO, c.partida.getFase());
+		assertEquals("Rodada final agendada", -1, c.partida.getRodadaFinal());
+		assertEquals("Rodada corrente", 2, c.partida.getRodada());
 	}
 
 	/**
@@ -170,9 +186,10 @@ public class IntegracaoPartidaTest {
 	public void recusaDoHookDeMelhoriasPreservaKhanPendente() {
 		PartidaTest.Cenario c = PartidaTest.padrao().iniciar(new ComponentesTeste());
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.VERMELHA), "coluna com Khan");
-		assertEquals("A parte 3 só resolve o Khan depois que a parte 2 aceita a ação",
-				Arrays.asList(false, null, true), Arrays.asList(c.partida.moverKhanParaMelhorias(),
-						c.partida.getPosicaoKhan(), c.partida.getTurno().isKhanPendente()));
+		boolean resultadoDeMoverKhanParaMelhorias = c.partida.moverKhanParaMelhorias();
+		assertFalse("A recusa do componente de melhorias deve impedir mover o Khan", resultadoDeMoverKhanParaMelhorias);
+		assertEquals("Posição do Khan", null, c.partida.getPosicaoKhan());
+		assertTrue("A obrigação do Khan deve continuar pendente", c.partida.getTurno().isKhanPendente());
 	}
 
 	/**
@@ -191,10 +208,12 @@ public class IntegracaoPartidaTest {
 		PartidaTest.exigir(c.partida.pegarTesouroComMoeda(cidade.getNome()), "compra de Ogedei");
 		PartidaTest.exigir(c.partida.atacarCidade(cidade.getNome()), "primeiro ataque deve custar uma espada");
 		boolean segundoAtaque = c.partida.atacarCidade(cidade.getNome());
-		assertEquals("A moeda de Ogedei não é um ataque com espada e o hook recebe cada peça tomada",
-				Arrays.asList(true, 0, 0, 1, 3, 3), Arrays.asList(segundoAtaque,
-						c.azul().contarTributo(TipoTributo.ESPADA), c.azul().contarTributo(TipoTributo.MOEDA),
-						cidade.getTesouros(), c.partida.getTesourosRecebidos(c.azul()), componentes.tesouros));
+		assertTrue("O segundo ataque com espadas deve ser aceito", segundoAtaque);
+		assertEquals("Espadas físicas de Azul", 0, c.azul().contarTributo(TipoTributo.ESPADA));
+		assertEquals("Moedas físicas de Azul", 0, c.azul().contarTributo(TipoTributo.MOEDA));
+		assertEquals("Tesouros restantes na cidade atacada", 1, cidade.getTesouros());
+		assertEquals("Tesouros recebidos por Azul", 3, c.partida.getTesourosRecebidos(c.azul()));
+		assertEquals("Tesouros transferidos ao componente da parte 2", 3, componentes.tesouros);
 	}
 
 	/**
@@ -208,9 +227,10 @@ public class IntegracaoPartidaTest {
 		c.azul().adicionarVotos(5);
 		c.jogadores.get(1).adicionarVotos(5);
 		PartidaTest.exigir(c.partida.concluirAcaoComplementar(false), "registrar votos recebidos da parte 2");
-		assertEquals("O limite de dez é coletivo, não o máximo individual",
-				Arrays.asList(10, 2, 5, 5), Arrays.asList(c.partida.getPosicaoKurultai(), c.partida.getRodadaFinal(),
-						c.azul().getVotos(), c.jogadores.get(1).getVotos()));
+		assertEquals("Posição coletiva da ficha neutra no Kurultai", 10, c.partida.getPosicaoKurultai());
+		assertEquals("Rodada final agendada", 2, c.partida.getRodadaFinal());
+		assertEquals("Votos de Azul", 5, c.azul().getVotos());
+		assertEquals("Votos de Vermelho", 5, c.jogadores.get(1).getVotos());
 	}
 
 	/**
@@ -224,8 +244,9 @@ public class IntegracaoPartidaTest {
 		ComponentesTeste componentes = new ComponentesTeste();
 		c.iniciar(componentes);
 		PartidaTest.exigir(c.partida.concluirAcaoComplementar(true), "entrega válida implementada pela parte 2");
-		assertEquals("A integração de uma entrega deve manter um único peão ativo no turno",
-				Arrays.asList(false, 1), Arrays.asList(c.partida.escolherPeao(1), componentes.avaliacoes));
+		boolean resultadoDeEscolherPeao = c.partida.escolherPeao(1);
+		assertFalse("A ação complementar deve impedir trocar o peão de Altani", resultadoDeEscolherPeao);
+		assertEquals("Chamadas ao hook de cartas", 1, componentes.avaliacoes);
 	}
 
 	/**
@@ -249,10 +270,13 @@ public class IntegracaoPartidaTest {
 		Cidade ultima = c.revelada();
 		PartidaTest.deixarUltimoTesouro(ultima, c.azul());
 		boolean conquistou = c.partida.atacarCidade(ultima.getNome());
-		assertEquals("Só a conquista da última cidade deve disparar o fim, independentemente do Kurultai",
-				Arrays.asList(-1, true, 2, 0, 0, 8, Fase.EM_ANDAMENTO),
-				Arrays.asList(antesDaUltima, conquistou, c.partida.getRodadaFinal(), c.partida.getPosicaoKurultai(),
-						c.reveladas().size(), c.azul().getYurtsDisponiveis(), c.partida.getFase()));
+		assertEquals("Rodada final antes da conquista da última cidade", -1, antesDaUltima);
+		assertTrue("A última cidade deve ser conquistada", conquistou);
+		assertEquals("Rodada final agendada", 2, c.partida.getRodadaFinal());
+		assertEquals("Posição coletiva da ficha neutra no Kurultai", 0, c.partida.getPosicaoKurultai());
+		assertEquals("Cidades disponíveis para ataque", 0, c.reveladas().size());
+		assertEquals("Yurts disponíveis de Azul", 8, c.azul().getYurtsDisponiveis());
+		assertEquals("Fase da partida", Fase.EM_ANDAMENTO, c.partida.getFase());
 	}
 
 	/**
@@ -273,11 +297,13 @@ public class IntegracaoPartidaTest {
 		});
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.VERMELHA), "coluna com Khan");
 		boolean moveu = c.partida.moverKhanParaMelhorias();
-		assertEquals("A aceitação do destino deve resolver o Khan e conservar as peças físicas",
-				Arrays.asList(true, Partida.AREA_MELHORIAS, false, 2, 1, 10, 8),
-				Arrays.asList(moveu, c.partida.getPosicaoKhan(), c.partida.getTurno().isKhanPendente(),
-						c.azul().contarTributo(TipoTributo.MOEDA), c.azul().contarTributo(TipoTributo.ESPADA),
-						c.partida.getEstoque(TipoTributo.MOEDA), c.partida.getEstoque(TipoTributo.ESPADA)));
+		assertTrue("O Khan deve ser aceito na área de melhorias pelo componente da parte 2", moveu);
+		assertEquals("Posição do Khan", Partida.AREA_MELHORIAS, c.partida.getPosicaoKhan());
+		assertFalse("A obrigação do Khan deve estar resolvida", c.partida.getTurno().isKhanPendente());
+		assertEquals("Moedas físicas de Azul", 2, c.azul().contarTributo(TipoTributo.MOEDA));
+		assertEquals("Espadas físicas de Azul", 1, c.azul().contarTributo(TipoTributo.ESPADA));
+		assertEquals("Estoque físico de moedas no banco", 10, c.partida.getEstoque(TipoTributo.MOEDA));
+		assertEquals("Estoque físico de espadas no banco", 8, c.partida.getEstoque(TipoTributo.ESPADA));
 	}
 
 	/**
@@ -300,9 +326,10 @@ public class IntegracaoPartidaTest {
 		});
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.AMARELA), "primeira avaliação de cartas após ativar");
 		boolean terminou = c.partida.terminarTurno();
-		assertEquals("O encerramento não deve reabrir o fluxo de ações e escolhas da parte 2",
-				Arrays.asList(true, 1, false, c.jogadores.get(1)),
-				Arrays.asList(terminou, avaliacoes[0], pendente[0], c.partida.getJogadorDaVez()));
+		assertTrue("O turno sem escolhas pendentes deve ser encerrado", terminou);
+		assertEquals("Chamadas ao hook de cartas", 1, avaliacoes[0]);
+		assertFalse("O encerramento não deve abrir uma escolha pendente", pendente[0]);
+		assertEquals("Jogador da vez", c.jogadores.get(1), c.partida.getJogadorDaVez());
 	}
 
 	/** Implementação controlada do contrato; nenhuma regra de carta real é duplicada. */

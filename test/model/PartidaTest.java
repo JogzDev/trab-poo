@@ -1,6 +1,7 @@
 package model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
@@ -24,13 +25,16 @@ public class PartidaTest {
 	public void preparacaoDistribuiMoedasPeoesToluiEBancoFisico() {
 		Cenario c = new Cenario(Herdeiro.TOLUI, Herdeiro.CHAGATAI, Herdeiro.OGEDEI);
 		c.criar(new ComponentesPartida() { });
-		assertEquals("A preparação deve respeitar os componentes físicos e colocar todos em Karakorum",
-				Arrays.asList(1, 1, 2, 11, true, "K", 9, 9, 9, Fase.PREPARACAO),
-				Arrays.asList(c.azul().contarTributo(TipoTributo.MOEDA), c.jogadores.get(1).contarTributo(TipoTributo.MOEDA),
-						c.jogadores.get(2).contarTributo(TipoTributo.MOEDA), c.azul().getYurtsDisponiveis(),
-						c.tabuleiro.getKarakorum().temYurtDe(Cor.AZUL), c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome(),
-						c.partida.getEstoque(TipoTributo.ESPADA), c.partida.getEstoque(TipoTributo.YURT),
-						c.partida.getEstoque(TipoTributo.MOEDA), c.partida.getFase()));
+		assertEquals("Moedas físicas de Azul", 1, c.azul().contarTributo(TipoTributo.MOEDA));
+		assertEquals("Moedas físicas de Vermelho", 1, c.jogadores.get(1).contarTributo(TipoTributo.MOEDA));
+		assertEquals("Moedas físicas do terceiro jogador", 2, c.jogadores.get(2).contarTributo(TipoTributo.MOEDA));
+		assertEquals("Yurts disponíveis de Azul", 11, c.azul().getYurtsDisponiveis());
+		assertTrue("Tolui deve ter seu yurt inicial em Karakorum", c.tabuleiro.getKarakorum().temYurtDe(Cor.AZUL));
+		assertEquals("Posição do peão de Azul", "K", c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome());
+		assertEquals("Estoque físico de espadas no banco", 9, c.partida.getEstoque(TipoTributo.ESPADA));
+		assertEquals("Estoque físico de tributos de yurt no banco", 9, c.partida.getEstoque(TipoTributo.YURT));
+		assertEquals("Estoque físico de moedas no banco", 9, c.partida.getEstoque(TipoTributo.MOEDA));
+		assertEquals("Fase da partida", Fase.PREPARACAO, c.partida.getFase());
 	}
 
 	/**
@@ -44,10 +48,12 @@ public class PartidaTest {
 		c.criar(new ComponentesPartida() {
 			@Override public boolean preparacaoConcluida() { return false; }
 		});
-		assertEquals("Escolhas iniciais pendentes devem impedir qualquer ativação",
-				Arrays.asList(false, false, Fase.PREPARACAO, 4),
-				Arrays.asList(c.partida.iniciar(), c.partida.ativarColuna(Coluna.AMARELA),
-						c.partida.getFase(), c.azul().getFichasDisponiveis().size()));
+		boolean resultadoDeIniciar = c.partida.iniciar();
+		boolean resultadoDeAtivarColuna = c.partida.ativarColuna(Coluna.AMARELA);
+		assertFalse("O início com preparação incompleta deve ser recusado", resultadoDeIniciar);
+		assertFalse("Uma coluna não pode ser ativada durante a preparação pendente", resultadoDeAtivarColuna);
+		assertEquals("Fase da partida", Fase.PREPARACAO, c.partida.getFase());
+		assertEquals("Fichas de ativação disponíveis de Azul", 4, c.azul().getFichasDisponiveis().size());
 	}
 
 	/**
@@ -59,10 +65,11 @@ public class PartidaTest {
 	public void segundaColunaNoMesmoTurnoERecusadaSemAlteracoes() {
 		Cenario c = padrao().iniciar();
 		exigir(c.partida.ativarColuna(Coluna.AMARELA), "ativação inicial");
-		assertEquals("A segunda coluna não pode alterar ações ou fichas",
-				Arrays.asList(false, 2, Coluna.AMARELA, true),
-				Arrays.asList(c.partida.ativarColuna(Coluna.VERDE), c.partida.getTurno().getCavalos(),
-						c.partida.getTurno().getColuna(), c.azul().temFichaDisponivel(Coluna.VERDE)));
+		boolean resultadoDeAtivarColuna = c.partida.ativarColuna(Coluna.VERDE);
+		assertFalse("A coluna verde deve ser recusada depois de ativar a amarela no mesmo turno", resultadoDeAtivarColuna);
+		assertEquals("Cavalos restantes no turno", 2, c.partida.getTurno().getCavalos());
+		assertEquals("Coluna ativada no turno", Coluna.AMARELA, c.partida.getTurno().getColuna());
+		assertTrue("A ficha verde deve continuar disponível", c.azul().temFichaDisponivel(Coluna.VERDE));
 	}
 
 	/**
@@ -74,10 +81,11 @@ public class PartidaTest {
 	public void khanPendenteImpedeEncerrarTurno() {
 		Cenario c = padrao().iniciar();
 		exigir(c.partida.ativarColuna(Coluna.VERMELHA), "coluna com Khan");
-		assertEquals("A obrigação do Khan deve manter o jogador no mesmo turno",
-				Arrays.asList(false, c.azul(), 1, true),
-				Arrays.asList(c.partida.terminarTurno(), c.partida.getJogadorDaVez(),
-						c.partida.getTurno().getNumero(), c.partida.getTurno().isKhanPendente()));
+		boolean resultadoDeTerminarTurno = c.partida.terminarTurno();
+		assertFalse("O turno não deve terminar enquanto o Khan obrigatório estiver pendente", resultadoDeTerminarTurno);
+		assertEquals("Jogador da vez", c.azul(), c.partida.getJogadorDaVez());
+		assertEquals("Número do turno corrente", 1, c.partida.getTurno().getNumero());
+		assertTrue("A obrigação do Khan deve continuar pendente", c.partida.getTurno().isKhanPendente());
 	}
 
 	/**
@@ -93,12 +101,13 @@ public class PartidaTest {
 		c.iniciar();
 		exigir(c.partida.ativarColuna(Coluna.VERMELHA), "coluna com Khan");
 		exigir(c.partida.moverKhanParaProvincia("KA"), "movimento válido do Khan");
-		assertEquals("Província cheia não consome uma quarta peça do banco",
-				Arrays.asList(2, 3, 2, 7, 8, 10, false),
-				Arrays.asList(c.tabuleiro.getProvincia("KA").getPecas(), c.tabuleiro.getProvincia("X").getPecas(),
-						c.tabuleiro.getProvincia("Y").getPecas(), c.partida.getEstoque(TipoTributo.ESPADA),
-						c.partida.getEstoque(TipoTributo.YURT), c.partida.getEstoque(TipoTributo.MOEDA),
-						c.partida.getTurno().isKhanPendente()));
+		assertEquals("Peças na província KA", 2, c.tabuleiro.getProvincia("KA").getPecas());
+		assertEquals("Peças na província X", 3, c.tabuleiro.getProvincia("X").getPecas());
+		assertEquals("Peças na província Y", 2, c.tabuleiro.getProvincia("Y").getPecas());
+		assertEquals("Estoque físico de espadas no banco", 7, c.partida.getEstoque(TipoTributo.ESPADA));
+		assertEquals("Estoque físico de tributos de yurt no banco", 8, c.partida.getEstoque(TipoTributo.YURT));
+		assertEquals("Estoque físico de moedas no banco", 10, c.partida.getEstoque(TipoTributo.MOEDA));
+		assertFalse("A obrigação do Khan deve estar resolvida", c.partida.getTurno().isKhanPendente());
 	}
 
 	/**
@@ -113,10 +122,11 @@ public class PartidaTest {
 		exigir(c.partida.moverKhanParaProvincia("KA"), "primeiro destino");
 		exigir(c.partida.terminarTurno(), "troca de jogador");
 		exigir(c.partida.ativarColuna(Coluna.AMARELA), "ativação de Ogedei");
-		assertEquals("Repetir o destino deve preservar as peças e a obrigação do Khan",
-				Arrays.asList(false, "KA", 2, true),
-				Arrays.asList(c.partida.moverKhanParaProvincia("KA"), c.partida.getPosicaoKhan(),
-						c.tabuleiro.getProvincia("KA").getPecas(), c.partida.getTurno().isKhanPendente()));
+		boolean resultadoDeMoverKhanParaProvincia = c.partida.moverKhanParaProvincia("KA");
+		assertFalse("O Khan deve sair de KA em vez de permanecer no mesmo lugar", resultadoDeMoverKhanParaProvincia);
+		assertEquals("Posição do Khan", "KA", c.partida.getPosicaoKhan());
+		assertEquals("Peças na província KA", 2, c.tabuleiro.getProvincia("KA").getPecas());
+		assertTrue("A obrigação do Khan deve continuar pendente", c.partida.getTurno().isKhanPendente());
 	}
 
 	/**
@@ -128,11 +138,12 @@ public class PartidaTest {
 	public void destinoInvalidoDoKhanPreservaEstado() {
 		Cenario c = padrao().iniciar();
 		exigir(c.partida.ativarColuna(Coluna.VERMELHA), "coluna com Khan");
-		assertEquals("Uma província comum não pode receber o Khan",
-				Arrays.asList(false, null, 1, 9, true),
-				Arrays.asList(c.partida.moverKhanParaProvincia("X"), c.partida.getPosicaoKhan(),
-						c.tabuleiro.getProvincia("X").getPecas(), c.partida.getEstoque(TipoTributo.ESPADA),
-						c.partida.getTurno().isKhanPendente()));
+		boolean resultadoDeMoverKhanParaProvincia = c.partida.moverKhanParaProvincia("X");
+		assertFalse("A província comum X não deve receber o Khan", resultadoDeMoverKhanParaProvincia);
+		assertEquals("Posição do Khan", null, c.partida.getPosicaoKhan());
+		assertEquals("Peças na província X", 1, c.tabuleiro.getProvincia("X").getPecas());
+		assertEquals("Estoque físico de espadas no banco", 9, c.partida.getEstoque(TipoTributo.ESPADA));
+		assertTrue("A obrigação do Khan deve continuar pendente", c.partida.getTurno().isKhanPendente());
 	}
 
 	/**
@@ -165,9 +176,10 @@ public class PartidaTest {
 		Cidade cidade = c.revelada();
 		exigir(c.partida.atacarCidade(cidade.getNome()), "primeiro ataque");
 		exigir(c.partida.atacarCidade(cidade.getNome()), "segundo ataque");
-		assertEquals("Dois ataques à mesma cidade custam 1 + 2 espadas",
-				Arrays.asList(0, 2, 2, 9), Arrays.asList(c.azul().contarTributo(TipoTributo.ESPADA),
-						cidade.getTesouros(), c.partida.getTesourosRecebidos(c.azul()), c.partida.getEstoque(TipoTributo.ESPADA)));
+		assertEquals("Espadas físicas de Azul", 0, c.azul().contarTributo(TipoTributo.ESPADA));
+		assertEquals("Tesouros restantes na cidade atacada", 2, cidade.getTesouros());
+		assertEquals("Tesouros recebidos por Azul", 2, c.partida.getTesourosRecebidos(c.azul()));
+		assertEquals("Estoque físico de espadas no banco", 9, c.partida.getEstoque(TipoTributo.ESPADA));
 	}
 
 	/**
@@ -183,9 +195,9 @@ public class PartidaTest {
 		List<Cidade> cidades = c.reveladas();
 		exigir(c.partida.atacarCidade(cidades.get(0).getNome()), "primeira cidade");
 		boolean segundo = c.partida.atacarCidade(cidades.get(1).getNome());
-		assertEquals("A primeira peça de cada cidade custa uma espada",
-				Arrays.asList(true, 0, 2), Arrays.asList(segundo, c.azul().contarTributo(TipoTributo.ESPADA),
-						c.partida.getTesourosRecebidos(c.azul())));
+		assertTrue("O primeiro ataque à segunda cidade deve ser aceito", segundo);
+		assertEquals("Espadas físicas de Azul", 0, c.azul().contarTributo(TipoTributo.ESPADA));
+		assertEquals("Tesouros recebidos por Azul", 2, c.partida.getTesourosRecebidos(c.azul()));
 	}
 
 	/**
@@ -201,10 +213,12 @@ public class PartidaTest {
 		c.iniciar();
 		Cidade cidade = c.revelada();
 		deixarUltimoTesouro(cidade, c.azul());
-		assertEquals("Não se pode tomar o último tesouro sem o yurt de conquista",
-				Arrays.asList(false, 1, 1, false, 0), Arrays.asList(c.partida.atacarCidade(cidade.getNome()),
-						c.azul().contarTributo(TipoTributo.ESPADA), cidade.getTesouros(), cidade.isConquistada(),
-						c.partida.getTesourosRecebidos(c.azul())));
+		boolean resultadoDeAtacarCidade = c.partida.atacarCidade(cidade.getNome());
+		assertFalse("O ataque sem yurt de conquista deve ser recusado", resultadoDeAtacarCidade);
+		assertEquals("Espadas físicas de Azul", 1, c.azul().contarTributo(TipoTributo.ESPADA));
+		assertEquals("Tesouros restantes na cidade atacada", 1, cidade.getTesouros());
+		assertFalse("A cidade deve continuar sem conquista", cidade.isConquistada());
+		assertEquals("Tesouros recebidos por Azul", 0, c.partida.getTesourosRecebidos(c.azul()));
 	}
 
 	/**
@@ -220,9 +234,10 @@ public class PartidaTest {
 		Cidade cidade = c.revelada();
 		deixarUltimoTesouro(cidade, c.azul());
 		exigir(c.partida.atacarCidade(cidade.getNome()), "ataque de conquista");
-		assertEquals("A conquista deve substituir a cidade disponível para ataque",
-				Arrays.asList(11, Cor.AZUL, 3, 4), Arrays.asList(c.azul().getYurtsDisponiveis(),
-						cidade.getConquistadaPor(), c.reveladas().size(), c.reveladas().get(0).getTesouros()));
+		assertEquals("Yurts disponíveis de Azul", 11, c.azul().getYurtsDisponiveis());
+		assertEquals("Cor do yurt de conquista", Cor.AZUL, cidade.getConquistadaPor());
+		assertEquals("Cidades disponíveis para ataque", 3, c.reveladas().size());
+		assertEquals("Tesouros na próxima cidade revelada", 4, c.reveladas().get(0).getTesouros());
 	}
 
 	/**
@@ -282,9 +297,11 @@ public class PartidaTest {
 		exigir(c.partida.ativarColuna(Coluna.AMARELA), "dois cavalos de Chagatai");
 		boolean primeira = c.partida.trocarCavaloPorEspada();
 		boolean segunda = c.partida.trocarCavaloPorEspada();
-		assertEquals("A habilidade deve gastar um único cavalo e transferir uma única peça física do banco",
-				Arrays.asList(true, false, 1, 1, 8), Arrays.asList(primeira, segunda, c.partida.getTurno().getCavalos(),
-						c.azul().contarTributo(TipoTributo.ESPADA), c.partida.getEstoque(TipoTributo.ESPADA)));
+		assertTrue("A primeira troca de Chagatai deve ser aceita", primeira);
+		assertFalse("A segunda troca de Chagatai no turno deve ser recusada", segunda);
+		assertEquals("Cavalos restantes no turno", 1, c.partida.getTurno().getCavalos());
+		assertEquals("Espadas físicas de Azul", 1, c.azul().contarTributo(TipoTributo.ESPADA));
+		assertEquals("Estoque físico de espadas no banco", 8, c.partida.getEstoque(TipoTributo.ESPADA));
 	}
 
 	static Cenario padrao() { return new Cenario(Herdeiro.CHAGATAI, Herdeiro.OGEDEI); }

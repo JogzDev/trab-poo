@@ -1,6 +1,8 @@
 package model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,9 +21,12 @@ public class MovimentoPartidaTest {
 	@Test(timeout = TEMPO_LIMITE)
 	public void semColunaAtivadaNaoHaMovimento() {
 		PartidaTest.Cenario c = PartidaTest.padrao().iniciar();
-		assertEquals("Sem cavalos não deve haver movimento nem alteração do tabuleiro",
-				Arrays.asList(false, false, "K", 0), Arrays.asList(c.partida.podeMoverPara("B"),
-						c.partida.moverPara("B"), c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome(), c.partida.getTurno().getCavalos()));
+		boolean podeMover = c.partida.podeMoverPara("B");
+		boolean resultadoDeMoverPara = c.partida.moverPara("B");
+		assertFalse("Sem ações de coluna não deve haver destino alcançável", podeMover);
+		assertFalse("Sem coluna ativada, o peão não deve sair de Karakorum", resultadoDeMoverPara);
+		assertEquals("Posição do peão de Azul", "K", c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome());
+		assertEquals("Cavalos restantes no turno", 0, c.partida.getTurno().getCavalos());
 	}
 
 	/**
@@ -33,9 +38,10 @@ public class MovimentoPartidaTest {
 	public void limiteDeCavalosRecusaMovimentoSemGastarParcialmente() {
 		PartidaTest.Cenario c = PartidaTest.padrao().iniciar();
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.AMARELA), "dois cavalos");
-		assertEquals("Um destino distante não pode gastar cavalos parcialmente",
-				Arrays.asList(false, "K", 2), Arrays.asList(c.partida.moverPara("D"),
-						c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome(), c.partida.getTurno().getCavalos()));
+		boolean resultadoDeMoverPara = c.partida.moverPara("D");
+		assertFalse("D exige três cavalos e a coluna amarela oferece apenas dois", resultadoDeMoverPara);
+		assertEquals("Posição do peão de Azul", "K", c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome());
+		assertEquals("Cavalos restantes no turno", 2, c.partida.getTurno().getCavalos());
 	}
 
 	/**
@@ -48,9 +54,10 @@ public class MovimentoPartidaTest {
 		PartidaTest.Cenario c = PartidaTest.padrao().iniciar();
 		c.tabuleiro.posicionarPeao(c.jogadores.get(1).getPeao(0), c.tabuleiro.getParada("B"));
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.AMARELA), "coluna de movimento");
-		assertEquals("A ocupação de outro jogador impede terminar em B",
-				Arrays.asList(false, "K", 2), Arrays.asList(c.partida.moverPara("B"),
-						c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome(), c.partida.getTurno().getCavalos()));
+		boolean resultadoDeMoverPara = c.partida.moverPara("B");
+		assertFalse("B ocupada por Vermelho não deve aceitar o peão de Azul como destino", resultadoDeMoverPara);
+		assertEquals("Posição do peão de Azul", "K", c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome());
+		assertEquals("Cavalos restantes no turno", 2, c.partida.getTurno().getCavalos());
 	}
 
 	/**
@@ -64,10 +71,11 @@ public class MovimentoPartidaTest {
 		c.tabuleiro.posicionarPeao(c.jogadores.get(1).getPeao(0), c.tabuleiro.getParada("B"));
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.AMARELA), "dois cavalos");
 		PartidaTest.exigir(c.partida.moverPor(Arrays.asList("B", "C")), "atravessar B ocupada");
-		assertEquals("Passar por uma parada ocupada ainda conta como visitá-la",
-				Arrays.asList(true, "C", 0, 1), Arrays.asList(c.partida.pegarTributo("X"),
-						c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome(), c.partida.getTurno().getCavalos(),
-						c.azul().contarTributo(TipoTributo.ESPADA)));
+		boolean resultadoDePegarTributo = c.partida.pegarTributo("X");
+		assertTrue("A coleta deve ser aceita na parada visitada", resultadoDePegarTributo);
+		assertEquals("Posição do peão de Azul", "C", c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome());
+		assertEquals("Cavalos restantes no turno", 0, c.partida.getTurno().getCavalos());
+		assertEquals("Espadas físicas de Azul", 1, c.azul().contarTributo(TipoTributo.ESPADA));
 	}
 
 	/**
@@ -81,10 +89,10 @@ public class MovimentoPartidaTest {
 		PartidaTest.exigir(c.tabuleiro.colocarYurt(c.tabuleiro.getParada("B"), c.azul()), "yurt do cenário");
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.VERDE), "um cavalo");
 		boolean moveu = c.partida.moverPara("C");
-		assertEquals("O yurt intermediário deve ser pulado e não visitado",
-				Arrays.asList(true, "C", 0, false), Arrays.asList(moveu,
-						c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome(), c.partida.getTurno().getCavalos(),
-						c.partida.getTurno().getParadasVisitadas().contains(c.tabuleiro.getParada("B"))));
+		assertTrue("O movimento válido deve ser aceito", moveu);
+		assertEquals("Posição do peão de Azul", "C", c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome());
+		assertEquals("Cavalos restantes no turno", 0, c.partida.getTurno().getCavalos());
+		assertFalse("A parada B pulada não deve constar nas visitas", c.partida.getTurno().getParadasVisitadas().contains(c.tabuleiro.getParada("B")));
 	}
 
 	/**
@@ -98,9 +106,11 @@ public class MovimentoPartidaTest {
 		PartidaTest.exigir(c.tabuleiro.colocarYurt(c.tabuleiro.getParada("B"), c.azul()), "yurt do cenário");
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.VERDE), "um cavalo e uma mão");
 		PartidaTest.exigir(c.partida.moverPara("C"), "salto de B");
-		assertEquals("A província da parada pulada permanece fora do alcance",
-				Arrays.asList(false, 1, 1, 0), Arrays.asList(c.partida.pegarTributo("X"),
-						c.tabuleiro.getProvincia("X").getPecas(), c.partida.getTurno().getMaos(), c.azul().contarTributo(TipoTributo.ESPADA)));
+		boolean resultadoDePegarTributo = c.partida.pegarTributo("X");
+		assertFalse("A coleta deve ser recusada na parada pulada", resultadoDePegarTributo);
+		assertEquals("Peças na província X", 1, c.tabuleiro.getProvincia("X").getPecas());
+		assertEquals("Mãos restantes no turno", 1, c.partida.getTurno().getMaos());
+		assertEquals("Espadas físicas de Azul", 0, c.azul().contarTributo(TipoTributo.ESPADA));
 	}
 
 	/**
@@ -112,10 +122,11 @@ public class MovimentoPartidaTest {
 	public void rotaComSegundoPassoInvalidoNaoAplicaPrimeiroPasso() {
 		PartidaTest.Cenario c = PartidaTest.padrao().iniciar();
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.AMARELA), "dois cavalos");
-		assertEquals("Uma rota inválida deve ser inteiramente atômica",
-				Arrays.asList(false, "K", 2, Collections.singleton(c.tabuleiro.getParada("K"))),
-				Arrays.asList(c.partida.moverPor(Arrays.asList("B", "E")),
-						c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome(), c.partida.getTurno().getCavalos(), c.partida.getTurno().getParadasVisitadas()));
+		boolean resultadoDeMoverPor = c.partida.moverPor(Arrays.asList("B", "E"));
+		assertFalse("A rota inválida deve ser recusada", resultadoDeMoverPor);
+		assertEquals("Posição do peão de Azul", "K", c.tabuleiro.posicaoDe(c.azul().getPeao(0)).getNome());
+		assertEquals("Cavalos restantes no turno", 2, c.partida.getTurno().getCavalos());
+		assertEquals("Paradas visitadas após a recusa da rota", Collections.singleton(c.tabuleiro.getParada("K")), c.partida.getTurno().getParadasVisitadas());
 	}
 
 	/**
@@ -130,8 +141,9 @@ public class MovimentoPartidaTest {
 		c.tabuleiro.posicionarPeao(c.jogadores.get(1).getPeao(0), c.tabuleiro.getParada("D"));
 		PartidaTest.exigir(c.partida.escolherPeao(0), "posição inicial em C");
 		PartidaTest.exigir(c.partida.ativarColuna(Coluna.VERDE), "um cavalo");
-		assertEquals("A parada dupla deve acomodar o segundo jogador",
-				Arrays.asList(true, 2, 0), Arrays.asList(c.partida.moverPara("D"),
-						c.tabuleiro.peoesEm(c.tabuleiro.getParada("D")).size(), c.partida.getTurno().getCavalos()));
+		boolean resultadoDeMoverPara = c.partida.moverPara("D");
+		assertTrue("O movimento deve ser aceito", resultadoDeMoverPara);
+		assertEquals("Peões na parada dupla D", 2, c.tabuleiro.peoesEm(c.tabuleiro.getParada("D")).size());
+		assertEquals("Cavalos restantes no turno", 0, c.partida.getTurno().getCavalos());
 	}
 }
