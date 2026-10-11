@@ -77,18 +77,6 @@ os anéis, e o tributo/posição de cada província. Para corrigir, edite apenas
 as listas em `MapaOficial.java` (uma linha por parada/rota/província); os
 testes de `MapaOficialTest` continuam valendo. Veja `docs/mapa-manual.jpg`.
 
-## Como abrir no Eclipse
-
-1. Instale o **Eclipse IDE for Java Developers (2026-06 R)**:
-   <https://www.eclipse.org/downloads/packages/> (o enunciado pede essa
-   versão e o JDK 25).
-2. `File > Import... > General > Existing Projects into Workspace`, escolha
-   esta pasta. O projeto `HerdeirosDeKhan` aparece já configurado.
-3. Se o Eclipse avisar que não achou o JRE "JavaSE-17", em
-   `Project > Properties > Java Build Path > Libraries` troque o JRE System
-   Library pelo JDK instalado (17, 21 ou 25 funcionam).
-4. Testes: botão direito em `test` → `Run As > JUnit Test`.
-
 ## Como rodar os testes sem Eclipse
 
 ```bash
