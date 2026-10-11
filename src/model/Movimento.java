@@ -22,7 +22,8 @@ final class Movimento {
 	/**
 	 * Encontra o caminho de menor custo até um destino diferente da origem.
 	 * Empates usam menos passos e, em seguida, a ordem dos nomes percorridos.
-	 * Intermediários com yurt próprio são pulados; o destino sempre custa 1.
+	 * O cálculo escolhe pular yurts próprios intermediários para economizar
+	 * cavalos; o destino sempre custa 1. A rota explícita permite não pular.
 	 *
 	 * @return null se os argumentos ou o movimento forem inválidos
 	 */
@@ -51,7 +52,7 @@ final class Movimento {
 				continue;
 			}
 			if (atual.parada.equals(destino)) {
-				return resultado(atual.percorridas, atual.custo, jogador);
+				return resultado(atual.percorridas, atual.custo, saltosAutomaticos(atual.percorridas, jogador));
 			}
 			List<Parada> vizinhas = new ArrayList<>(tabuleiro.vizinhas(atual.parada));
 			vizinhas.sort(Comparator.comparing(Parada::getNome));
@@ -77,6 +78,7 @@ final class Movimento {
 	 * Valida os nomes percorridos, excluindo a origem e incluindo o destino.
 	 * A rota pode repetir paradas, inclusive voltar à origem, pagando o custo.
 	 * Só o último ponto é submetido à regra de ocupação de destino.
+	 * Esta chamada conserva a opção de pular yurts próprios intermediários.
 	 */
 	static Resultado validarRota(Tabuleiro tabuleiro, Peao peao, Jogador jogador,
 			List<String> nomes, int cavalos) {
@@ -84,13 +86,29 @@ final class Movimento {
 				|| nomes == null || nomes.isEmpty()) {
 			return null;
 		}
-		List<Parada> percorridas = new ArrayList<>();
-		for (String nome : nomes) {
-			Parada p = parada(tabuleiro, nome);
-			if (p == null) {
-				return null;
-			}
-			percorridas.add(p);
+		List<Parada> percorridas = paradasDaRota(tabuleiro, nomes);
+		if (percorridas == null) {
+			return null;
+		}
+		return validarRota(tabuleiro, peao, jogador, nomes, saltosAutomaticos(percorridas, jogador), cavalos);
+	}
+
+	/**
+	 * Cada opção corresponde à parada de chegada do mesmo passo da rota.
+	 * true pula um yurt próprio intermediário, sem custo nem visita; false
+	 * visita a parada e custa um cavalo, mesmo quando ela tem um yurt próprio.
+	 * O destino sempre é visitado e não pode ter a opção true.
+	 */
+	static Resultado validarRota(Tabuleiro tabuleiro, Peao peao, Jogador jogador,
+			List<String> nomes, List<Boolean> saltarYurts, int cavalos) {
+		if (!entradaValida(tabuleiro, peao, jogador, cavalos)
+				|| nomes == null || nomes.isEmpty() || saltarYurts == null
+				|| saltarYurts.size() != nomes.size()) {
+			return null;
+		}
+		List<Parada> percorridas = paradasDaRota(tabuleiro, nomes);
+		if (percorridas == null) {
+			return null;
 		}
 		Parada destino = percorridas.get(percorridas.size() - 1);
 		if (!tabuleiro.podeTerminarMovimentoEm(peao, destino)) {
@@ -103,15 +121,18 @@ final class Movimento {
 			if (!tabuleiro.saoVizinhas(anterior, atual)) {
 				return null;
 			}
-			// Uma visita intermediária ao destino também pode ser pulada.
 			boolean ultima = i == percorridas.size() - 1;
-			custo += ultima || !atual.temYurtDe(jogador.getCor()) ? 1 : 0;
+			Boolean saltar = saltarYurts.get(i);
+			if (saltar == null || (saltar && (ultima || !atual.temYurtDe(jogador.getCor())))) {
+				return null;
+			}
+			custo += saltar ? 0 : 1;
 			if (custo > cavalos) {
 				return null;
 			}
 			anterior = atual;
 		}
-		return resultado(percorridas, custo, jogador);
+		return resultado(percorridas, custo, saltarYurts);
 	}
 
 	private static boolean entradaValida(Tabuleiro tabuleiro, Peao peao,
@@ -132,12 +153,31 @@ final class Movimento {
 		return parada.equals(destino) || !parada.temYurtDe(jogador.getCor()) ? 1 : 0;
 	}
 
-	private static Resultado resultado(List<Parada> percorridas, int custo, Jogador jogador) {
+	private static List<Parada> paradasDaRota(Tabuleiro tabuleiro, List<String> nomes) {
+		List<Parada> percorridas = new ArrayList<>();
+		for (String nome : nomes) {
+			Parada p = parada(tabuleiro, nome);
+			if (p == null) {
+				return null;
+			}
+			percorridas.add(p);
+		}
+		return percorridas;
+	}
+
+	private static List<Boolean> saltosAutomaticos(List<Parada> percorridas, Jogador jogador) {
+		List<Boolean> saltarYurts = new ArrayList<>();
+		for (int i = 0; i < percorridas.size(); i++) {
+			saltarYurts.add(i < percorridas.size() - 1 && percorridas.get(i).temYurtDe(jogador.getCor()));
+		}
+		return saltarYurts;
+	}
+
+	private static Resultado resultado(List<Parada> percorridas, int custo, List<Boolean> saltarYurts) {
 		Set<Parada> visitadas = new LinkedHashSet<>();
 		for (int i = 0; i < percorridas.size(); i++) {
-			Parada parada = percorridas.get(i);
-			if (i == percorridas.size() - 1 || !parada.temYurtDe(jogador.getCor())) {
-				visitadas.add(parada);
+			if (!saltarYurts.get(i)) {
+				visitadas.add(percorridas.get(i));
 			}
 		}
 		return new Resultado(percorridas.get(percorridas.size() - 1), custo, visitadas);

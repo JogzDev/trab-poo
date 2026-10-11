@@ -166,6 +166,11 @@ class Partida {
 		if (!emAndamento()) return false;
 		return executarMovimento(Movimento.validarRota(tabuleiro, turno.getPeaoAtivo(), getJogadorDaVez(), rota, turno.getCavalos()));
 	}
+	/** Cada flag indica se a parada daquele passo deve ser pulada sobre um yurt. */
+	boolean moverPor(List<String> rota, List<Boolean> saltarYurts) {
+		if (!emAndamento()) return false;
+		return executarMovimento(Movimento.validarRota(tabuleiro, turno.getPeaoAtivo(), getJogadorDaVez(), rota, saltarYurts, turno.getCavalos()));
+	}
 	private boolean executarMovimento(Movimento.Resultado caminho) {
 		if (caminho == null) return false;
 		tabuleiro.posicionarPeao(turno.getPeaoAtivo(), caminho.getDestino());

@@ -11,6 +11,7 @@ import org.junit.runners.Suite;
 	TabuleiroTest.class,
 	MapaOficialTest.class,
 	MovimentoTest.class,
+	MovimentoOpcionalTest.class,
 	PartidaTest.class,
 	MovimentoPartidaTest.class,
 	IntegracaoPartidaTest.class
