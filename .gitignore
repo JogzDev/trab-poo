@@ -1,0 +1,10 @@
+# Saída de compilação (Eclipse e scripts)
+bin/
+bin-test/
+build/
+*.class
+
+# Arquivos de SO / IDE
+.DS_Store
+.idea/
+*.iml
