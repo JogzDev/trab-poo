@@ -105,3 +105,18 @@ Javadoc. Os principais (os três pedidos na divisão do grupo estão em negrito)
 - `MapaOficialTest`: invariantes do mapa: 9 cidades (3/região), 7
   conselheiros, rotas simétricas, mapa conexo a partir de Karakorum, 4
   províncias do Khan com 2 vizinhas e 1 tributo inicial em cada província.
+
+## Parte 3: partida, turnos e movimento
+
+Esta contribuição acrescenta `Partida`, `Turno`, `Fase`, `Movimento` e os testes da parte 3, preservando as classes e a documentação original da parte 1 acima. `Partida` decide as regras de preparação, turno, gasto de recursos, ações e encerramento no Model. O futuro Controller poderá consultar a legalidade e solicitar a execução das ações.
+
+- `podeAtacarCidade`, `podePegarTributo` e `podeConstruirYurt` consultam a legalidade sem gastar recursos nem alterar o estado.
+- `moverPara` escolhe um caminho de menor custo e salta automaticamente yurts próprios intermediários. O destino sempre custa um cavalo e conta como visitado.
+- `moverPor(List<String>, List<Boolean>)` permite escolher em cada passagem intermediária se o peão salta o yurt próprio ou visita a parada pagando um cavalo. Assim, passar por um yurt pode habilitar coleta, ataque ou construção quando o jogador optar pela visita.
+- A branca recupera todas as fichas para o próximo turno. O fim termina a rodada atual e permite mais uma rodada completa.
+
+`ComponentesPartida` e `EfeitosColuna` são uma **proposta provisória de integração** com cartas, melhorias, bônus e tesouros. O contrato ainda precisa ser alinhado com a Pessoa 2 antes de integrar a contribuição na `main`; não define a arquitetura da parte 2 como decisão já aprovada. A contribuição permanece em PR draft até esse alinhamento.
+
+Esta versão reúne as partes 1 e 3 e seus contratos propostos; não implementa o jogo completo. A implementação base dos componentes serve para testar o subconjunto disponível e não calcula influência por melhorias, cartas secretas ou desempates finais. As limitações do mapa descritas acima continuam válidas.
+
+Consulte [docs/parte3-integracao.md](docs/parte3-integracao.md) para a proposta, as consultas e as escolhas de movimento, e [docs/testes-parte3.md](docs/testes-parte3.md) para os testes. Execute `./scripts/run_tests.sh` com JDK 17 ou superior, ou rode `TodosOsTestes` como JUnit Test no Eclipse. A contagem de 29 testes na seção original refere-se à base da parte 1. A suíte ampliada desta revisão passou no runner com JDK 17: **100 testes, zero falhas** (29 da base e 71 da parte 3).
