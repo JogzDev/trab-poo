@@ -1,10 +1,12 @@
 package model;
 
 /**
- * Contrato da parte 2 com a partida. Os métodos padrão permitem testar somente
- * as regras das partes 1 e 3; não implementam cartas, melhorias ou tesouros tipados.
- * Uma implementação completa deve manter as escolhas iniciais pendentes até
- * todos escolherem a carta secreta e Jochi escolher sua melhoria.
+ * Proposta provisória de integração da parte 2 com a partida. O contrato precisa
+ * ser alinhado com a Pessoa 2 antes da integração na main; não impõe uma
+ * arquitetura já aprovada para cartas, melhorias ou tesouros tipados.
+ * Os métodos padrão permitem testar somente as regras das partes 1 e 3.
+ * Na integração completa, as escolhas iniciais ficam pendentes até todos
+ * escolherem a carta secreta e Jochi escolher sua melhoria.
  */
 interface ComponentesPartida {
 	default boolean preparacaoConcluida() { return true; }

@@ -1,10 +1,12 @@
 # Integração da parte 3
 
-A parte 3 controla a partida no Model: preparação, turnos, ativação, movimento, coleta, ataques, yurts, Khan, tributos e sequência de encerramento. A parte 2 conecta cartas, tesouros, melhorias, bônus e entregas por `ComponentesPartida`. Não deve criar um segundo controle de turno nem outro estoque de tributos.
+A parte 3 controla a partida no Model: preparação, turnos, ativação, movimento, coleta, ataques, yurts, Khan, tributos e sequência de encerramento.
+
+`ComponentesPartida` é uma **proposta provisória**, usada nesta contribuição para demonstrar a ligação com cartas, tesouros, melhorias, bônus e entregas. O contrato precisa ser alinhado com a Pessoa 2 antes da integração na `main`; não impõe uma arquitetura já aprovada para a parte 2. O PR permanece draft até esse alinhamento. As assinaturas abaixo descrevem a proposta atual e podem ser ajustadas em conjunto.
 
 ## Contratos dos componentes
 
-| Operação | Responsabilidade da parte 2 |
+| Operação | Responsabilidade proposta |
 |---|---|
 | `preparacaoConcluida()` | Confirmar que todos resolveram as escolhas iniciais exigidas, incluindo conselheiro secreto e melhoria inicial de Jochi. |
 | `efeitosDasMelhorias(Jogador, Coluna, int)` | Retornar `EfeitosColuna` com cavalos, mãos e tributos virtuais da coluna, respeitando o turno de aquisição. Uma melhoria comprada neste turno não pode produzir ações nele. |
@@ -20,7 +22,7 @@ Os componentes base permitem iniciar uma partida para testar o subconjunto dispo
 
 ## Recursos e votos
 
-O banco é limitado a 10 espadas, 10 tributos de yurt e 15 moedas, descontando as peças nas províncias e com os jogadores. A parte 2 deve solicitar gastos por `Partida.gastarTributo(TipoTributo, int)` e recebimentos por `Partida.receberTributoDoEstoque(TipoTributo, int)`, que atuam sobre o jogador da vez, sem chamar diretamente `Jogador.gastarTributo(...)` ou criar peças físicas. O gasto prioriza os recursos virtuais e devolve as peças físicas ao banco; recursos virtuais expiram com o turno. O recebimento devolve a quantidade efetivamente retirada do banco.
+O banco é limitado a 10 espadas, 10 tributos de yurt e 15 moedas, descontando as peças nas províncias e com os jogadores. Nesta proposta, gastos passam por `Partida.gastarTributo(TipoTributo, int)` e recebimentos por `Partida.receberTributoDoEstoque(TipoTributo, int)`, que atuam sobre o jogador da vez. Assim, o integrador evita gastar diretamente em `Jogador` e perder a devolução ao banco. O gasto prioriza os recursos virtuais e devolve as peças físicas ao banco; recursos virtuais expiram com o turno. O recebimento devolve a quantidade efetivamente retirada do banco.
 
 No callback `aposAcao`, a parte 2 concede votos por `Jogador.adicionarVotos(int)`. Ao retornar, `Partida` sincroniza os aumentos de votos de todos os jogadores com a ficha neutra e verifica o gatilho de encerramento. A pontuação adicional concedida por `pontuarFimDeJogo` não avança a neutra nem abre novos turnos. Cada carta aberta sai de jogo após ser cumprida, e apenas o primeiro jogador recebe seu voto.
 
@@ -28,7 +30,17 @@ Depois de uma ação própria bem-sucedida, a parte 2 chama `Partida.concluirAca
 
 `terminarTurno()` verifica Khan e escolhas pendentes antes de concluir. Ele recupera as fichas quando a coluna é branca e sincroniza votos e gatilhos, mas **não chama `aposAcao` novamente**: as cartas já foram avaliadas durante as ações. Assim, encerrar não abre uma nova escolha obrigatória nem repete uma recompensa.
 
-Uma recompensa impossível por esgotamento completo das melhorias precisa deixar de bloquear o turno. A parte 2 deve conservar a política explicitamente documentada de estoque finito, sem fabricar peças. Chamadas recusadas preservam o estado: validar antes de gastar ou retirar qualquer peça.
+O tratamento de recompensas impossíveis por esgotamento completo das melhorias ainda precisa ser alinhado com a Pessoa 2. A proposta é não fabricar peças e impedir que uma recompensa sem peça disponível bloqueie indefinidamente o turno. Chamadas recusadas preservam o estado: a implementação valida antes de gastar ou retirar qualquer peça.
+
+## Consultas de legalidade e movimento opcional
+
+`Partida.podeAtacarCidade(String)`, `podePegarTributo(String)` e `podeConstruirYurt(String)` permitem consultar uma ação antes de executá-la. Elas usam as regras da partida e preservam o estado, incluindo recursos físicos e virtuais, posição, visitas e efeitos de cartas. Os métodos de execução também validam novamente a ação.
+
+`moverPara(String)` calcula um caminho de menor custo, com saltos automáticos sobre yurts próprios intermediários. A parada de destino custa um cavalo e conta como visitada, mesmo que tenha yurt próprio.
+
+A rota explícita `moverPor(List<String>, List<Boolean> saltarYurts)` permite optar por uma visita intermediária em vez de saltar. A lista de nomes contém as chegadas de cada passo, sem incluir a origem e incluindo o destino. A lista de flags tem o mesmo tamanho: `false` paga um cavalo e registra a parada; `true` salta um yurt próprio intermediário, sem custo e sem registrar visita. Esse controle permite escolher uma parada que habilite ações posteriores.
+
+Uma flag `true` no destino ou em parada sem yurt próprio é inválida. Listas nulas, flags nulas e tamanhos divergentes também são recusados. Uma rota recusada não move parcialmente o peão nem gasta cavalos. O overload `moverPor(List<String>)` continua usando saltos automáticos sobre yurts próprios intermediários.
 
 ## Regras que a integração deve preservar
 
@@ -40,14 +52,3 @@ Uma recompensa impossível por esgotamento completo das melhorias precisa deixar
 - **Branca (p. 9):** recupera todas as fichas de ativação, inclusive a usada na branca; elas ficam disponíveis no próximo turno.
 - **Khan (p. 9):** a ação indicada pela coluna é obrigatória; o Khan muda de lugar e repõe sua província e as duas apontadas, respeitando o limite de três peças e o banco.
 - **Encerramento (p. 14):** alcançar 10/14/16/17 votos neutros em partidas de 2/3/4/5 jogadores, ou conquistar todas as cidades, dispara o fim. Termina-se a rodada atual e joga-se mais uma rodada completa antes da pontuação final.
-
-## Reaproveitamento da versão individual
-
-| Aproveitar | Adaptação necessária |
-|---|---|
-| Condições das cartas abertas e secretas | Trocar `Mapa`/`TabuleiroJogador` e o estado de `Jogo` pelos objetos do grupo e pelos componentes. |
-| Melhorias, bônus e inventários de tesouro | Integrar a ativação, o turno de aquisição, as escolhas pendentes e o banco de `Partida`. |
-| Testes e cenários de regressão | Reescrever a preparação e as chamadas para a API do grupo; manter as expectativas de regras. |
-| Regras de influência e desempate | Aplicar na pontuação final com as melhorias reais e os tesouros não entregues da parte 2. |
-
-Os módulos são referências de lógica, não substituições diretas de arquivos. `Jogo`, `Turno`, `Mapa` e seus enums da versão individual usam contratos diferentes. Neste repositório, `Partida` e `Tabuleiro` permanecem os responsáveis pelo estado e pelas decisões do Model.

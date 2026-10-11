@@ -1,56 +1,122 @@
-# Herdeiros de Khan — INF1636 (POO)
+# Herdeiros de Khan: Trabalho de INF1636 (POO)
 
-Projeto Eclipse em Java 17 para a **1ª iteração**, dedicada ao componente Model. A entrega reúne a **parte 1** (tabuleiro e jogadores) e a **parte 3** (partida, turnos e movimento). A parte 2 (cartas, tipos de tesouro, melhorias, bônus e entregas) ainda precisa ser integrada; esta versão não é o jogo completo.
+Projeto Eclipse em Java do jogo **Herdeiros de Khan**, organizado em MVC.
+Esta é a **1ª iteração** (28/09 → 11/10/2026): só o componente **Model**, sem
+View nem Controller, com testes unitários em JUnit 4.
 
-## Estrutura
+> Importante: o jogo do trabalho é **Herdeiros de Khan** (manual em
+> `Regas.pdf`), não War. O documento da 1ª iteração usa War apenas como
+> exemplo de como o Controller consulta o Model. A divisão de tarefas inicial
+> do grupo foi escrita com termos de War; a tabela de correspondência está
+> mais abaixo.
 
-| Caminho | Conteúdo |
-|---|---|
-| `src/model/` | Classes do Model, todas com visibilidade de pacote. |
-| `test/model/` | Testes JUnit 4, no mesmo pacote do Model. |
-| `lib/` | JUnit 4.13.2 e Hamcrest Core 1.3. |
-| `.project`, `.classpath`, `.settings/` | Configuração Eclipse, JavaSE-17. |
-| `scripts/run_tests.sh` | Compilação e execução dos testes pelo terminal. |
-| `docs/` | Regras, mapa de referência e contratos de integração. |
+## Estrutura do projeto
 
-`Tabuleiro`, `Parada`, `Cidade`, `Provincia`, `Peao`, `Jogador` e os enums representam o mapa e os jogadores. `Partida`, `Turno`, `Fase` e `Movimento` controlam a preparação, a ordem dos jogadores, a ativação de colunas, as ações, o caminho percorrido e o encerramento. `ComponentesPartida` e `EfeitosColuna` permitem conectar a parte 2 sem duplicar esse controle.
+```
+.project / .classpath / .settings   Projeto Eclipse (JavaSE-17, JUnit 4 em lib/)
+src/model/                          Pacote Model (todas as classes são package-private)
+test/model/                         Testes JUnit 4 (mesmo pacote, pasta de fontes separada)
+lib/                                junit-4.13.2.jar e hamcrest-core-1.3.jar
+scripts/run_tests.sh                Roda os testes pela linha de comando (sem Eclipse)
+docs/                               Resumo das regras usadas pelo Model e imagem do mapa
+```
 
-O **Model decide se cada ação é legal** e mantém os recursos e estados consistentes. O futuro Controller solicitará ações e consultará seus resultados; a View apresentará esses dados. A fachada pública e o Singleton ficam para a iteração correspondente do trabalho.
+Conforme o enunciado, as classes do Model **não são públicas**: só o pacote
+`model` as enxerga. A API pública (Façade + Singleton) será criada na 3ª
+iteração. Todas as coleções usam o framework de coleções (`HashMap`,
+`HashSet`, `ArrayList`).
 
-## Classes da base — parte 1
+## Classes do Model (parte 1: tabuleiro e jogadores)
 
 | Classe | Papel |
 |---|---|
-| `Tabuleiro` | Grafo de paradas e rotas em coleções; registra cidades, províncias e posições de peões. Consulta vizinhança, adjacência, capacidade, yurts e maioria por região. |
-| `Jogador` | Nome, cor, herdeiro, peões, estoque pessoal de 12 yurts, quatro fichas de ativação, tributos e votos. |
-| `Parada` | Nó do mapa, com região, tipo e yurts de uma ou mais cores; respeita a capacidade de construção. |
-| `Cidade` | Revelação com quatro tesouros, retirada de tesouros e conquista pelo último; o yurt de conquista conta para influência, sem auxiliar movimento. |
-| `Provincia` | Tipo de tributo, até três peças, paradas adjacentes e setas das províncias do Khan. |
-| `Peao` | Identifica um peão e sua cor; Altani possui dois. A posição fica no tabuleiro. |
-| `Herdeiro` | Os cinco herdeiros, suas habilidades e ações impressas nas quatro colunas, transcritas das cartelas. |
-| `MapaOficial` | Monta a geografia em `Tabuleiro`; as aproximações da transcrição estão descritas abaixo. |
-| `Cor`, `Regiao`, `Coluna`, `TipoTributo`, `TipoParada` | Enums para as cinco cores, três regiões, quatro colunas, moeda/espada/yurt e parada simples/dupla/Karakorum. |
+| `Cor` (enum) | As 5 cores de jogador. |
+| `Regiao` (enum) | Rússia, China e Pérsia; cada uma ligada a uma coluna colorida da cartela. |
+| `Coluna` (enum) | Vermelha, Verde, Amarela e Branca (colunas de ações da cartela). |
+| `TipoTributo` (enum) | Espada, Yurt e Moeda. |
+| `TipoParada` (enum) | Simples (1 peão / 1 yurt), Dupla (2 / 2, tem conselheiro) e Karakorum (todos / 0). |
+| `Parada` | Nó das rotas. Guarda os yurts construídos nela, respeitando a capacidade. |
+| `Cidade` | Uma das 9 cidades: revelada → 4 tesouros → último tesouro conquista (yurt de conquista). |
+| `Provincia` | Área entre rotas com um tipo de tributo (máx. 3 peças); 4 delas são "do Khan" e apontam para 2 vizinhas. |
+| `Peao` | Peão de um jogador (Altani tem 2). |
+| `Herdeiro` (enum) | Os 5 herdeiros, habilidade e as 4 colunas de ações transcritas das cartelas. |
+| `Jogador` | Cor, herdeiro, peões, estoque de 12 yurts, 4 peças de ativação, tributos e votos. |
+| `Tabuleiro` | `HashMap<String, Parada>` + `HashMap<Parada, Set<Parada>>` (rotas) + cidades, províncias, posição dos peões; consultas de vizinhança, yurts, maioria por região e movimento. |
+| `MapaOficial` | Monta o `Tabuleiro` com a geografia do jogo (**rotas a validar**, ver abaixo). |
 
-Os arquivos dessa base foram preservados. A parte 3 acrescenta o controle das regras de turno sobre esses objetos; a parte 2 deverá usar os contratos de integração para cartas, peças e inventários adicionais.
+### Correspondência com a divisão original (termos de War → Herdeiros de Khan)
 
-## Abrir e testar
+| Combinado no grupo | Neste projeto | Observação |
+|---|---|---|
+| `Territorio` | `Parada` | Nó do mapa; não tem um único dono, guarda yurts de várias cores. |
+| `HashMap<String, Territorio>` | `Tabuleiro.paradas` | Igual. |
+| `HashMap<Territorio, Set<Territorio>>` fronteiras | `Tabuleiro.rotas` | Igual (rotas sempre simétricas). |
+| `Continente` + bônus de exércitos | `Regiao` | O "bônus" do jogo são os votos de influência por maioria de yurts. |
+| `getTerritorio(nome)` | `getParada(nome)` | Lança `IllegalArgumentException` se não existe. |
+| `saoVizinhos(a, b)` | `saoVizinhas(a, b)` | |
+| `donoDe(territorio)` | `temYurtDe(parada, jogador)` / `Parada.getYurts()` | |
+| `exercitosEm(territorio)` | `yurtsEm(parada)` | |
+| `adicionarExercitos` / `removerExercitos` | `colocarYurt(parada, jogador)` / `removerYurt(...)` | Mexem no estoque do jogador. |
+| `territoriosDe(jogador)` | `paradasComYurtDe(jogador)` | |
+| `dominaContinente(jogador, continente)` | `temMaioriaDeYurts(jogador, regiao)` + `lideresEmYurts` / `segundosEmYurts` | Regra de empate do manual (p. 15). |
 
-No Eclipse, use **File > Import > General > Existing Projects into Workspace > Select root directory** e selecione a pasta do repositório. Configure um JDK 17 ou superior; as dependências JUnit já estão em `lib/`. Execute `test/model/TodosOsTestes.java` com **Run As > JUnit Test**.
+O que o Model **não** faz de propósito: decidir *quando* uma ação é permitida
+(sequência do turno, gasto de cavalos, uso do Khan). Isso é do Controller, que
+usa as consultas do `Tabuleiro` (`saoVizinhas`, `podeTerminarMovimentoEm`,
+`cidadesAdjacentes`, `provinciasAdjacentes`...). Cartas, tesouros e melhorias
+são das outras partes do trabalho e se encaixam em `Jogador`/`Cidade` sem
+alterar o que existe.
 
-No terminal, com JDK 17 ou superior:
+## ⚠️ Mapa: o que precisa ser conferido com o tabuleiro físico
 
-```sh
+`MapaOficial` foi transcrito do manual escaneado (pp. 4 a 5), onde a rede de rotas
+aparece pequena. Está **confirmado**: 3 regiões; 9 cidades (3 por região);
+7 conselheiros (6 paradas duplas + Karakorum); 4 províncias do Khan.
+É **aproximação**: quantas paradas há em cada anel de cidade, quais rotas ligam
+os anéis, e o tributo/posição de cada província. Para corrigir, edite apenas
+as listas em `MapaOficial.java` (uma linha por parada/rota/província); os
+testes de `MapaOficialTest` continuam valendo. Veja `docs/mapa-manual.jpg`.
+
+## Como rodar os testes sem Eclipse
+
+```bash
 ./scripts/run_tests.sh
 ```
 
-A suíte completa passou no runner com Java 17: **83 testes, zero falhas** — 29 da base e 54 das novas classes de movimento, partida e integração. Os testes de integração usam componentes substituíveis; não representam a parte 2 completa. Veja os cenários e a organização em [docs/testes-parte3.md](docs/testes-parte3.md).
+Compila `src/` e `test/` com `javac` e roda `org.junit.runner.JUnitCore`.
+Resultado atual: 29 testes, todos passando.
 
-## Integrar a parte 2
+## Testes (JUnit 4)
 
-Os contratos, a política de tributos e os pontos de verificação das cartas estão em [docs/parte3-integracao.md](docs/parte3-integracao.md). A implementação base dos componentes permite testar o subconjunto entregue. Ela não resolve as escolhas de cartas, não concede tesouros tipados e não calcula a pontuação final de influência e conselheiro secreto. A identificação final do vencedor e os desempates dependem dessa integração.
+Cada caso de teste documenta **Objetivo / Entrada / Saída esperada** no
+Javadoc. Os principais (os três pedidos na divisão do grupo estão em negrito):
 
-## Limitações e referências
+- `TabuleiroTest`: **vizinhança correta** (rota simétrica, não-vizinhas a dois
+  passos, parada inexistente), **"dono muda"** (construir yurt retira do estoque
+  e marca a parada; capacidade 1/2/0 por tipo de parada; remoção devolve ao
+  estoque), **maioria na região** (empate no 1º lugar, 2º lugar, yurt de
+  conquista de cidade contando para a região), movimento de peões (só vizinha,
+  capacidade de peões, peões de Altani não se bloqueiam), adjacência de cidades e
+  províncias.
+- `CidadeProvinciaTest`: revelar/atacar/conquistar cidade; máximo de 3 peças
+  por província; setas do Khan só em províncias do Khan.
+- `JogadorTest`: preparação inicial; peças de ativação; gasto de tributo
+  insuficiente; coerência das colunas transcritas das cartelas.
+- `MapaOficialTest`: invariantes do mapa: 9 cidades (3/região), 7
+  conselheiros, rotas simétricas, mapa conexo a partir de Karakorum, 4
+  províncias do Khan com 2 vizinhas e 1 tributo inicial em cada província.
 
-`MapaOficial` foi transcrito da imagem pequena do manual (pp. 4–5). Estão confirmadas três regiões, nove cidades (três por região), sete conselheiros (seis paradas duplas e Karakorum) e quatro províncias do Khan. Ainda são aproximações **a quantidade de paradas em cada anel de cidade, as rotas que ligam os anéis e o tipo de tributo e a posição de cada província**. Esses dados precisam ser conferidos com o tabuleiro físico e ajustados nas listas de `MapaOficial.java`. Os testes verificam invariantes como simetria e conectividade; isso não comprova toda a topologia. Consulte [docs/mapa-manual.jpg](docs/mapa-manual.jpg) e [docs/regras-para-o-model.md](docs/regras-para-o-model.md).
+## Parte 3: partida, turnos e movimento
 
-A versão individual mais abrangente oferece regras e testes aproveitáveis para cartas e melhorias, mas suas classes e API diferem das do grupo. A integração exige adaptar esses módulos aos contratos deste repositório; copiar a classe `Jogo` inteira criaria dois controles de partida e estoques concorrentes.
+Esta contribuição acrescenta `Partida`, `Turno`, `Fase`, `Movimento` e os testes da parte 3, preservando as classes e a documentação original da parte 1 acima. `Partida` decide as regras de preparação, turno, gasto de recursos, ações e encerramento no Model. O futuro Controller poderá consultar a legalidade e solicitar a execução das ações.
+
+- `podeAtacarCidade`, `podePegarTributo` e `podeConstruirYurt` consultam a legalidade sem gastar recursos nem alterar o estado.
+- `moverPara` escolhe um caminho de menor custo e salta automaticamente yurts próprios intermediários. O destino sempre custa um cavalo e conta como visitado.
+- `moverPor(List<String>, List<Boolean>)` permite escolher em cada passagem intermediária se o peão salta o yurt próprio ou visita a parada pagando um cavalo. Assim, passar por um yurt pode habilitar coleta, ataque ou construção quando o jogador optar pela visita.
+- A branca recupera todas as fichas para o próximo turno. O fim termina a rodada atual e permite mais uma rodada completa.
+
+`ComponentesPartida` e `EfeitosColuna` são uma **proposta provisória de integração** com cartas, melhorias, bônus e tesouros. O contrato ainda precisa ser alinhado com a Pessoa 2 antes de integrar a contribuição na `main`; não define a arquitetura da parte 2 como decisão já aprovada. A contribuição permanece em PR draft até esse alinhamento.
+
+Esta versão reúne as partes 1 e 3 e seus contratos propostos; não implementa o jogo completo. A implementação base dos componentes serve para testar o subconjunto disponível e não calcula influência por melhorias, cartas secretas ou desempates finais. As limitações do mapa descritas acima continuam válidas.
+
+Consulte [docs/parte3-integracao.md](docs/parte3-integracao.md) para a proposta, as consultas e as escolhas de movimento, e [docs/testes-parte3.md](docs/testes-parte3.md) para os testes. Execute `./scripts/run_tests.sh` com JDK 17 ou superior, ou rode `TodosOsTestes` como JUnit Test no Eclipse. A contagem de 29 testes na seção original refere-se à base da parte 1. A suíte ampliada desta revisão passou no runner com JDK 17: **100 testes, zero falhas** (29 da base e 71 da parte 3).
