@@ -3,9 +3,9 @@ package model;
 /**
  * Um peão de jogador sobre o mapa.
  *
- * <p>Cada jogador tem 1 peão, exceto o herdeiro Altani, que tem 2 (ver
- * {@link Herdeiro#getQuantidadePeoes()}). A posição do peão é mantida pelo
- * {@link Tabuleiro}, que conhece as rotas e as capacidades das paradas; esta
+ * Cada jogador tem 1 peão, exceto o herdeiro Altani, que tem 2 (ver
+ * Herdeiro#getQuantidadePeoes()). A posição do peão é mantida pelo
+ * Tabuleiro, que conhece as rotas e as capacidades das paradas; esta
  * classe guarda apenas a quem o peão pertence.
  */
 class Peao {

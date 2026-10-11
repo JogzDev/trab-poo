@@ -13,7 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Testes estruturais do mapa montado por {@link MapaOficial}. Eles verificam
+ * Testes estruturais do mapa montado por MapaOficial. Eles verificam
  * o que o manual garante (contagens, conectividade, simetria), e continuarão
  * valendo quando o grupo corrigir as rotas a partir do tabuleiro físico.
  */

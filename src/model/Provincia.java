@@ -7,16 +7,16 @@ import java.util.Set;
 /**
  * Uma província do mapa: área entre as rotas que fornece peças de tributo.
  *
- * <p>Regras do manual (pp. 5, 8 e 9):
- * <ul>
- *   <li>Cada província tem um ícone de tributo (yurt, espada ou moeda) e começa
- *       a partida com 1 peça; o máximo é 3 peças por província.</li>
- *   <li>Um jogador pode pegar tributo das províncias adjacentes às paradas
- *       onde seu peão esteve no turno.</li>
- *   <li>Quatro províncias são "províncias do Khan": quando o Khan é colocado
- *       em uma delas, ela e as 2 províncias vizinhas indicadas pelas setas
- *       recebem 1 peça de tributo cada (respeitando o máximo de 3).</li>
- * </ul>
+ * Regras do manual (pp. 5, 8 e 9):
+ *
+ * - Cada província tem um ícone de tributo (yurt, espada ou moeda) e começa
+ * a partida com 1 peça; o máximo é 3 peças por província.
+ * - Um jogador pode pegar tributo das províncias adjacentes às paradas
+ * onde seu peão esteve no turno.
+ * - Quatro províncias são "províncias do Khan": quando o Khan é colocado
+ * em uma delas, ela e as 2 províncias vizinhas indicadas pelas setas
+ * recebem 1 peça de tributo cada (respeitando o máximo de 3).
+ *
  */
 class Provincia {
 
@@ -96,7 +96,7 @@ class Provincia {
 	/**
 	 * Coloca uma peça de tributo, respeitando o máximo de 3.
 	 *
-	 * @return {@code true} se a peça foi colocada
+	 * @return true se a peça foi colocada
 	 */
 	boolean colocarPeca() {
 		if (pecas >= MAXIMO_PECAS) {
@@ -109,7 +109,7 @@ class Provincia {
 	/**
 	 * Retira uma peça de tributo (quando um jogador a pega).
 	 *
-	 * @return {@code true} se havia peça para retirar
+	 * @return true se havia peça para retirar
 	 */
 	boolean retirarPeca() {
 		if (pecas <= 0) {

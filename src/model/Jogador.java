@@ -11,12 +11,12 @@ import java.util.Set;
 /**
  * Um jogador de Herdeiros de Khan e tudo o que ele guarda à sua frente.
  *
- * <p>Preparação (manual, p. 3): cada jogador escolhe uma cor e recebe o
+ * Preparação (manual, p. 3): cada jogador escolhe uma cor e recebe o
  * tabuleiro de jogador (herdeiro) dessa cor, 4 peças de ativação, 12 yurts,
  * 2 cartas de conselheiro secreto e 1 moeda (1º e 2º a jogar) ou 2 moedas
  * (demais).
  *
- * <p>O que fica aqui: cor, herdeiro, peões, estoque de yurts, peças de ativação,
+ * O que fica aqui: cor, herdeiro, peões, estoque de yurts, peças de ativação,
  * peças de tributo e votos. As cartas, os tesouros e as melhorias serão
  * modelados pelas classes de cartas/peças (outras partes do trabalho) e podem
  * ser ligados a esta classe depois, sem alterar o que já existe (princípio
@@ -91,7 +91,7 @@ class Jogador {
 	/**
 	 * Retira um yurt do estoque do jogador (para ser colocado no mapa).
 	 *
-	 * @return {@code false} se o estoque já estava vazio
+	 * @return false se o estoque já estava vazio
 	 */
 	boolean retirarYurtDoEstoque() {
 		if (yurtsDisponiveis <= 0) {
@@ -122,7 +122,7 @@ class Jogador {
 	/**
 	 * Usa a peça de ativação de uma coluna.
 	 *
-	 * @return {@code false} se a ficha daquela coluna já tinha sido usada
+	 * @return false se a ficha daquela coluna já tinha sido usada
 	 */
 	boolean usarFicha(Coluna coluna) {
 		return fichasDisponiveis.remove(coluna);
@@ -150,8 +150,8 @@ class Jogador {
 	/**
 	 * Gasta peças de tributo.
 	 *
-	 * @return {@code false} (e não altera nada) se o jogador não tem o
-	 *         suficiente
+	 * @return false (e não altera nada) se o jogador não tem o
+	 * suficiente
 	 */
 	boolean gastarTributo(TipoTributo tipo, int quantidade) {
 		if (quantidade < 0) {

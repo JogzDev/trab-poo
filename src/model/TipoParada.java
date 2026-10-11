@@ -3,16 +3,16 @@ package model;
 /**
  * Tipos de parada (nó das rotas do mapa) e suas capacidades.
  *
- * <p>Regras do manual (pp. 7 e 11):
- * <ul>
- *   <li>Parada simples: só pode terminar o movimento nela se não houver peão de
- *       outro jogador; comporta no máximo 1 yurt.</li>
- *   <li>Parada dupla (parada de conselheiro): comporta 2 peões e até 2 yurts
- *       (podem ser 2 do mesmo jogador).</li>
- *   <li>Karakorum: comporta todos os peões e não pode receber yurts
- *       (exceção: a habilidade inicial do herdeiro Tolui, tratada por
- *       {@link Parada#colocarYurt(Cor, boolean)}).</li>
- * </ul>
+ * Regras do manual (pp. 7 e 11):
+ *
+ * - Parada simples: só pode terminar o movimento nela se não houver peão de
+ * outro jogador; comporta no máximo 1 yurt.
+ * - Parada dupla (parada de conselheiro): comporta 2 peões e até 2 yurts
+ * (podem ser 2 do mesmo jogador).
+ * - Karakorum: comporta todos os peões e não pode receber yurts
+ * (exceção: a habilidade inicial do herdeiro Tolui, tratada por
+ * Parada#colocarYurt(Cor, boolean)).
+ *
  */
 enum TipoParada {
 	SIMPLES(1, 1, false),

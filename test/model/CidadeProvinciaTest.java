@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-/** Testes das regras locais de {@link Cidade} e {@link Provincia}. */
+/** Testes das regras locais de Cidade e Provincia. */
 public class CidadeProvinciaTest {
 
 	/**

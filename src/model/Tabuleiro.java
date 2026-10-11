@@ -10,26 +10,25 @@ import java.util.Set;
 /**
  * O tabuleiro principal de Herdeiros de Khan: o mapa do Império Mongol.
  *
- * <p>Estrutura de dados (toda baseada em {@code HashMap}/{@code HashSet}):
- * <ul>
- *   <li>{@code paradas}: nome → {@link Parada} (os nós das rotas);</li>
- *   <li>{@code rotas}: {@link Parada} → conjunto de paradas vizinhas (as
- *       arestas; sempre simétricas);</li>
- *   <li>{@code paradasPorRegiao}: {@link Regiao} → paradas que ela contém;</li>
- *   <li>{@code cidades} e {@code provincias}: nome → objeto; cada um sabe a
- *       quais paradas é adjacente;</li>
- *   <li>{@code posicaoDosPeoes}: {@link Peao} → parada onde está.</li>
- * </ul>
+ * Estrutura de dados (toda baseada em HashMap/HashSet):
  *
- * <p>O tabuleiro só conhece a geografia e o estado das peças sobre ela. Quem
+ * - paradas: nome → Parada (os nós das rotas);
+ * - rotas: Parada → conjunto de paradas vizinhas (as
+ * arestas; sempre simétricas);
+ * - paradasPorRegiao: Regiao → paradas que ela contém;
+ * - cidades e provincias: nome → objeto; cada um sabe a
+ * quais paradas é adjacente;
+ * - posicaoDosPeoes: Peao → parada onde está.
+ *
+ * O tabuleiro só conhece a geografia e o estado das peças sobre ela. Quem
  * decide QUANDO um jogador pode mover, construir ou atacar é o Controller (que
- * usa as consultas daqui: {@link #saoVizinhas}, {@link #podeTerminarMovimentoEm},
- * {@link #contarYurts(Jogador, Regiao)} etc.).
+ * usa as consultas daqui: saoVizinhas, podeTerminarMovimentoEm,
+ * contarYurts(Jogador, Regiao) etc.).
  *
- * <p>Correspondência com o esqueleto originalmente combinado pelo grupo (que
+ * Correspondência com o esqueleto originalmente combinado pelo grupo (que
  * usava termos de War): Territorio → Parada, fronteiras → rotas,
- * Continente → Regiao, exércitos → yurts, donoDe → {@link #temYurtDe},
- * dominaContinente → {@link #temMaioriaDeYurts}.
+ * Continente → Regiao, exércitos → yurts, donoDe → temYurtDe,
+ * dominaContinente → temMaioriaDeYurts.
  */
 class Tabuleiro {
 
@@ -53,7 +52,7 @@ class Tabuleiro {
 	 * Cria e registra uma parada.
 	 *
 	 * @throws IllegalArgumentException se já existe parada com esse nome ou se
-	 *                                  já existe um Karakorum
+	 * já existe um Karakorum
 	 */
 	Parada adicionarParada(String nome, Regiao regiao, TipoParada tipo) {
 		if (paradas.containsKey(nome)) {
@@ -144,7 +143,7 @@ class Tabuleiro {
 		return Collections.unmodifiableCollection(paradas.values());
 	}
 
-	/** Karakorum, ou {@code null} se o mapa não tem uma. */
+	/** Karakorum, ou null se o mapa não tem uma. */
 	Parada getKarakorum() {
 		return karakorum;
 	}
@@ -242,8 +241,8 @@ class Tabuleiro {
 	 * Constrói um yurt do jogador na parada: retira do estoque do jogador e
 	 * coloca na parada, respeitando a capacidade dela.
 	 *
-	 * @return {@code false} (sem alterar nada) se a parada está cheia ou o
-	 *         jogador não tem yurts
+	 * @return false (sem alterar nada) se a parada está cheia ou o
+	 * jogador não tem yurts
 	 */
 	boolean colocarYurt(Parada p, Jogador j) {
 		exigirRegistrada(p);
@@ -385,7 +384,7 @@ class Tabuleiro {
 		posicaoDosPeoes.put(peao, p);
 	}
 
-	/** Parada onde o peão está; {@code null} se ainda não foi posicionado. */
+	/** Parada onde o peão está; null se ainda não foi posicionado. */
 	Parada posicaoDe(Peao peao) {
 		return posicaoDosPeoes.get(peao);
 	}
@@ -422,7 +421,7 @@ class Tabuleiro {
 	/**
 	 * Move o peão para uma parada vizinha (um passo = um cavalo).
 	 *
-	 * @return {@code false} se o destino não é vizinho ou não aceita o peão
+	 * @return false se o destino não é vizinho ou não aceita o peão
 	 */
 	boolean moverPeao(Peao peao, Parada destino) {
 		Parada origem = posicaoDe(peao);

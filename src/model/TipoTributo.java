@@ -3,11 +3,10 @@ package model;
 /**
  * Os três tipos de peça de tributo que existem nas províncias do mapa.
  *
- * <ul>
- *   <li>ESPADA: permite atacar cidades (tomar tesouros).</li>
- *   <li>YURT: permite construir um yurt do jogador no tabuleiro.</li>
- *   <li>MOEDA: duas moedas compram uma peça de melhoria.</li>
- * </ul>
+ * - ESPADA: permite atacar cidades (tomar tesouros).
+ * - YURT: permite construir um yurt do jogador no tabuleiro.
+ * - MOEDA: duas moedas compram uma peça de melhoria.
+ *
  */
 enum TipoTributo {
 	ESPADA("Espada"),

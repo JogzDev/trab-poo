@@ -8,14 +8,14 @@ import java.util.List;
  * Uma parada do mapa: ponto das rotas onde os peões param e onde os jogadores
  * constroem yurts.
  *
- * <p>É o equivalente ao "território" de um jogo como War. A diferença é que uma
+ * É o equivalente ao "território" de um jogo como War. A diferença é que uma
  * parada não tem um único dono: ela guarda os yurts (de uma ou mais cores) que
- * foram construídos nela, respeitando a capacidade do seu {@link TipoParada}.
+ * foram construídos nela, respeitando a capacidade do seu TipoParada.
  *
- * <p>A identidade da parada é o seu nome (único dentro de um {@link Tabuleiro}),
- * o que permite usá-la como chave de {@code HashMap} e elemento de {@code HashSet}.
- * As rotas (vizinhança) NÃO ficam aqui: ficam no {@link Tabuleiro}, no mapa
- * {@code HashMap<Parada, Set<Parada>>}.
+ * A identidade da parada é o seu nome (único dentro de um Tabuleiro),
+ * o que permite usá-la como chave de HashMap e elemento de HashSet.
+ * As rotas (vizinhança) NÃO ficam aqui: ficam no Tabuleiro, no mapa
+ * HashMap<Parada, Set<Parada>>.
  */
 class Parada {
 
@@ -27,7 +27,7 @@ class Parada {
 
 	/**
 	 * @param nome   nome único da parada
-	 * @param regiao região a que pertence; {@code null} somente para Karakorum
+	 * @param regiao região a que pertence; null somente para Karakorum
 	 * @param tipo   tipo (simples, dupla ou Karakorum)
 	 */
 	Parada(String nome, Regiao regiao, TipoParada tipo) {
@@ -49,7 +49,7 @@ class Parada {
 		return nome;
 	}
 
-	/** Região da parada; {@code null} para Karakorum. */
+	/** Região da parada; null para Karakorum. */
 	Regiao getRegiao() {
 		return regiao;
 	}
@@ -114,8 +114,8 @@ class Parada {
 	/**
 	 * Coloca um yurt da cor informada, respeitando a capacidade.
 	 *
-	 * @return {@code true} se o yurt foi colocado; {@code false} se a parada já
-	 *         estava cheia
+	 * @return true se o yurt foi colocado; false se a parada já
+	 * estava cheia
 	 */
 	boolean colocarYurt(Cor cor) {
 		return colocarYurt(cor, false);
@@ -124,7 +124,7 @@ class Parada {
 	/**
 	 * Coloca um yurt, opcionalmente ignorando a capacidade.
 	 *
-	 * <p>O parâmetro {@code ignorarCapacidade} existe para a habilidade do
+	 * O parâmetro ignorarCapacidade existe para a habilidade do
 	 * herdeiro Tolui, que começa a partida com 1 yurt em Karakorum (onde
 	 * normalmente não cabem yurts).
 	 */
@@ -142,7 +142,7 @@ class Parada {
 	/**
 	 * Remove um yurt da cor informada.
 	 *
-	 * @return {@code true} se havia um yurt dessa cor e ele foi removido
+	 * @return true se havia um yurt dessa cor e ele foi removido
 	 */
 	boolean removerYurt(Cor cor) {
 		return yurts.remove(cor);

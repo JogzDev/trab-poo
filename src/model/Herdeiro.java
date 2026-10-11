@@ -7,18 +7,16 @@ import java.util.Map;
 /**
  * Os cinco herdeiros de Genghis Khan (tabuleiros de jogador / cartelas).
  *
- * <p>Cada herdeiro tem uma habilidade especial (manual, p. 20) e quatro colunas
+ * Cada herdeiro tem uma habilidade especial (manual, p. 20) e quatro colunas
  * de ações cuja composição inicial difere entre os herdeiros. As composições
  * abaixo foram transcritas das cartelas (arquivo cartelas.zip):
  *
- * <pre>
- *            Vermelha              Verde                 Amarela               Branca
+ * Vermelha              Verde                 Amarela               Branca
  * Altani     1 cav, 2 mãos, Khan   2 cav, 1 mão          1 cav, 1 mão, moeda   2 cav, Khan, recuperar
  * Chagatai   1 cav, 2 mãos, Khan   1 cav, 1 mão, moeda   2 cav, 1 mão          2 cav, Khan, recuperar
  * Jochi      1 cav, 1 mão, moeda   1 cav, 2 mãos, Khan   2 cav, 1 mão          2 cav, Khan, recuperar
  * Ogedei     2 cav, 1 mão          1 cav, 1 mão, moeda   1 cav, 2 mãos, Khan   2 cav, Khan, recuperar
  * Tolui      1 cav, 1 mão, moeda   2 cav, 1 mão          1 cav, 2 mãos, Khan   2 cav, Khan, recuperar
- * </pre>
  *
  * (cav = cavalos = movimentos; mão = ação de pegar tributo; Khan = obrigação de
  * mover o Khan; moeda = moeda virtual válida só naquele turno.)
@@ -104,7 +102,7 @@ enum Herdeiro {
 	/**
 	 * Composição de ações impressa em uma coluna da cartela. Imutável.
 	 *
-	 * <p>As melhorias compradas durante a partida aumentam essas quantidades;
+	 * As melhorias compradas durante a partida aumentam essas quantidades;
 	 * isso será tratado pela classe que modelar o tabuleiro do jogador com as
 	 * melhorias (fora do escopo desta iteração).
 	 */

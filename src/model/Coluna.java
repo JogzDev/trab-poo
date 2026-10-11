@@ -3,9 +3,9 @@ package model;
 /**
  * As quatro colunas de ações do tabuleiro de jogador (cartela do herdeiro).
  *
- * <p>No seu turno o jogador coloca uma peça de ativação em uma coluna e executa
+ * No seu turno o jogador coloca uma peça de ativação em uma coluna e executa
  * as ações impressas nela. As três colunas coloridas estão associadas a uma
- * {@link Regiao} do mapa (ver {@link Regiao#getColuna()}); a coluna BRANCA é a
+ * Regiao do mapa (ver Regiao#getColuna()); a coluna BRANCA é a
  * que permite recuperar todas as peças de ativação usadas.
  */
 enum Coluna {

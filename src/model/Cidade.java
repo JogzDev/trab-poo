@@ -8,17 +8,16 @@ import java.util.Set;
  * Uma cidade do mapa (há 9: Kiev, Moscou, Sarai, Samarcanda, Bagdá, Cabul,
  * Pequim, Kaesong e Cantão).
  *
- * <p>Ciclo de vida segundo o manual (pp. 4 e 10):
- * <ol>
- *   <li>A cidade começa "fechada". Quando sua peça de cidade é revelada, ela
- *       recebe 4 peças de tesouro e passa a poder ser atacada.</li>
- *   <li>Cada ataque com espadas retira um tesouro.</li>
- *   <li>Quem retira o último tesouro conquista a cidade e coloca nela um yurt
- *       seu, que conta para a maioria de yurts da região (mas não ajuda na
- *       movimentação).</li>
- * </ol>
+ * Ciclo de vida segundo o manual (pp. 4 e 10):
  *
- * <p>Uma cidade é atacável a partir de qualquer parada adjacente a ela.
+ * - A cidade começa "fechada". Quando sua peça de cidade é revelada, ela
+ * recebe 4 peças de tesouro e passa a poder ser atacada.
+ * - Cada ataque com espadas retira um tesouro.
+ * - Quem retira o último tesouro conquista a cidade e coloca nela um yurt
+ * seu, que conta para a maioria de yurts da região (mas não ajuda na
+ * movimentação).
+ *
+ * Uma cidade é atacável a partir de qualquer parada adjacente a ela.
  */
 class Cidade {
 
@@ -73,7 +72,7 @@ class Cidade {
 		revelar(TESOUROS_AO_REVELAR);
 	}
 
-	/** Revela a cidade colocando nela {@code quantidadeTesouros} tesouros. */
+	/** Revela a cidade colocando nela quantidadeTesouros tesouros. */
 	void revelar(int quantidadeTesouros) {
 		if (revelada) {
 			throw new IllegalStateException("Cidade já revelada: " + nome);
@@ -98,7 +97,7 @@ class Cidade {
 	 * Retira um tesouro da cidade em favor do jogador da cor informada. Se era
 	 * o último, a cidade passa a estar conquistada por essa cor.
 	 *
-	 * @return {@code true} se um tesouro foi retirado
+	 * @return true se um tesouro foi retirado
 	 */
 	boolean retirarTesouro(Cor atacante) {
 		if (!podeSerAtacada()) {
@@ -117,7 +116,7 @@ class Cidade {
 		return yurtDeConquista != null;
 	}
 
-	/** Cor do yurt de conquista; {@code null} se a cidade não foi conquistada. */
+	/** Cor do yurt de conquista; null se a cidade não foi conquistada. */
 	Cor getConquistadaPor() {
 		return yurtDeConquista;
 	}

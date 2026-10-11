@@ -1,28 +1,28 @@
 package model;
 
 /**
- * Monta o {@link Tabuleiro} com o mapa do jogo físico.
+ * Monta o Tabuleiro com o mapa do jogo físico.
  *
- * <p><b>ATENÇÃO — dados a validar com o tabuleiro físico.</b> Este mapa foi
+ * ATENÇÃO — dados a validar com o tabuleiro físico. Este mapa foi
  * transcrito do manual escaneado (Regas.pdf, pp. 4 e 5), onde a rede de rotas
  * aparece pequena e borrada. O que está confirmado pelo manual:
- * <ul>
- *   <li>3 regiões (Rússia, China, Pérsia) e Karakorum no centro, fora delas;</li>
- *   <li>9 cidades: Kiev, Moscou, Sarai (Rússia); Samarcanda, Bagdá, Cabul
- *       (Pérsia); Pequim, Kaesong, Cantão (China);</li>
- *   <li>7 paradas de conselheiro: 6 paradas duplas na borda do mapa (com as
- *       peças de bônus trono, espadas, cavalos, yurts, moedas e baú) e
- *       Karakorum;</li>
- *   <li>4 províncias do Khan, cada uma com setas para 2 vizinhas;</li>
- *   <li>cada cidade fica dentro de um anel de rotas com paradas ao redor.</li>
- * </ul>
+ *
+ * - 3 regiões (Rússia, China, Pérsia) e Karakorum no centro, fora delas;
+ * - 9 cidades: Kiev, Moscou, Sarai (Rússia); Samarcanda, Bagdá, Cabul
+ * (Pérsia); Pequim, Kaesong, Cantão (China);
+ * - 7 paradas de conselheiro: 6 paradas duplas na borda do mapa (com as
+ * peças de bônus trono, espadas, cavalos, yurts, moedas e baú) e
+ * Karakorum;
+ * - 4 províncias do Khan, cada uma com setas para 2 vizinhas;
+ * - cada cidade fica dentro de um anel de rotas com paradas ao redor.
+ *
  * O que é aproximação e deve ser conferido olhando o tabuleiro de verdade:
  * o número exato de paradas em cada anel, quais rotas ligam os anéis, e a
  * localização/tipo de tributo de cada província. Para corrigir, basta editar as
  * listas abaixo — nenhuma outra classe depende desses nomes.
  *
- * <p>Convenção de nomes das paradas sem nome no jogo: "&lt;Cidade&gt; Norte/
- * Sul/Leste/Oeste" para as paradas do anel da cidade; "Conselheiro &lt;posição&gt;"
+ * Convenção de nomes das paradas sem nome no jogo: "<Cidade> Norte/
+ * Sul/Leste/Oeste" para as paradas do anel da cidade; "Conselheiro <posição>"
  * para as paradas duplas.
  */
 final class MapaOficial {

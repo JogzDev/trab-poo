@@ -11,15 +11,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Testes do {@link Tabuleiro} com um mapa pequeno de fixture (independente do
+ * Testes do Tabuleiro com um mapa pequeno de fixture (independente do
  * mapa oficial), para que cada caso teste exatamente uma regra.
  *
- * <p>Mapa de fixture:
- * <pre>
- *   A ─ B ─ C          A, B: Rússia (simples)   C: Rússia (dupla)
- *   │       │          D: Pérsia (simples)      K: Karakorum
- *   D ─ K ──┘          Cidade "Sarai" (Rússia) adjacente a B e C
- * </pre>
+ * Mapa de fixture:
+ *
+ * A ─ B ─ C          A, B: Rússia (simples)   C: Rússia (dupla)
+ * │       │          D: Pérsia (simples)      K: Karakorum
+ * D ─ K ──┘          Cidade "Sarai" (Rússia) adjacente a B e C
+ *
  */
 public class TabuleiroTest {
 

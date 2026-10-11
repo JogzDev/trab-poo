@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-/** Testes do estado guardado por {@link Jogador} e dos dados de {@link Herdeiro}. */
+/** Testes do estado guardado por Jogador e dos dados de Herdeiro. */
 public class JogadorTest {
 
 	/**
