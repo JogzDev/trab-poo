@@ -179,10 +179,15 @@ class Partida {
 		return true;
 	}
 
-	boolean pegarTributo(String nome) {
+	/** Consulta sem consumir ações, peças ou alterar a escolha do peão. */
+	boolean podePegarTributo(String nome) {
 		Provincia provincia = provincia(nome);
-		if (!emAndamento() || provincia == null || turno.getMaos() == 0 || !provincia.temPecas()
-				|| Collections.disjoint(provincia.getParadasAdjacentes(), turno.getParadasVisitadas())) return false;
+		return emAndamento() && provincia != null && turno.getMaos() > 0 && provincia.temPecas()
+				&& !Collections.disjoint(provincia.getParadasAdjacentes(), turno.getParadasVisitadas());
+	}
+	boolean pegarTributo(String nome) {
+		if (!podePegarTributo(nome)) return false;
+		Provincia provincia = provincia(nome);
 		provincia.retirarPeca();
 		getJogadorDaVez().adicionarTributo(provincia.getTributo(), 1);
 		turno.gastarMao();
@@ -191,7 +196,8 @@ class Partida {
 		return true;
 	}
 
-	boolean construirYurt(String nome) {
+	/** Consulta capacidade, alcance e recursos sem executar a construção. */
+	boolean podeConstruirYurt(String nome) {
 		if (!emAndamento() || !tabuleiro.existeParada(nome)) return false;
 		Parada parada = tabuleiro.getParada(nome);
 		Jogador jogador = getJogadorDaVez();
@@ -201,7 +207,12 @@ class Partida {
 				if (tabuleiro.saoVizinhas(visitada, parada)) alcance = true;
 			}
 		}
-		if (!alcance || !parada.podeReceberYurt() || !jogador.temYurtDisponivel() || recursos(TipoTributo.YURT) < 1) return false;
+		return alcance && parada.podeReceberYurt() && jogador.temYurtDisponivel() && recursos(TipoTributo.YURT) >= 1;
+	}
+	boolean construirYurt(String nome) {
+		if (!podeConstruirYurt(nome)) return false;
+		Parada parada = tabuleiro.getParada(nome);
+		Jogador jogador = getJogadorDaVez();
 		gastarTributo(TipoTributo.YURT, 1);
 		tabuleiro.colocarYurt(parada, jogador);
 		turno.registrarAcaoDoPeao();
@@ -209,13 +220,19 @@ class Partida {
 		return true;
 	}
 
-	boolean atacarCidade(String nome) {
+	/** Consulta custo, alcance e possibilidade de conquista sem retirar tesouro. */
+	boolean podeAtacarCidade(String nome) {
 		Cidade cidade = cidade(nome);
 		Jogador jogador = getJogadorDaVez();
 		if (!emAndamento() || cidade == null || !cidade.podeSerAtacada()
 				|| Collections.disjoint(cidade.getParadasAdjacentes(), turno.getParadasVisitadas())) return false;
 		int custo = turno.ataquesNaCidade(cidade) == 0 ? 1 : 2;
-		if (recursos(TipoTributo.ESPADA) < custo || (cidade.getTesouros() == 1 && !jogador.temYurtDisponivel())) return false;
+		return recursos(TipoTributo.ESPADA) >= custo && (cidade.getTesouros() != 1 || jogador.temYurtDisponivel());
+	}
+	boolean atacarCidade(String nome) {
+		if (!podeAtacarCidade(nome)) return false;
+		Cidade cidade = cidade(nome);
+		int custo = turno.ataquesNaCidade(cidade) == 0 ? 1 : 2;
 		gastarTributo(TipoTributo.ESPADA, custo);
 		turno.registrarAtaque(cidade);
 		tomarTesouro(cidade);

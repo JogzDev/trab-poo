@@ -14,7 +14,8 @@ import org.junit.runners.Suite;
 	MovimentoOpcionalTest.class,
 	PartidaTest.class,
 	MovimentoPartidaTest.class,
-	IntegracaoPartidaTest.class
+	IntegracaoPartidaTest.class,
+	ConsultasPartidaTest.class
 })
 public class TodosOsTestes {
 }
