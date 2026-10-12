@@ -5,6 +5,7 @@ build/
 *.class
 
 # Arquivos de SO / IDE
+.metadata/
 .DS_Store
 .idea/
 *.iml

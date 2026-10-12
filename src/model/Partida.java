@@ -57,6 +57,7 @@ class Partida {
 				throw new IllegalArgumentException("Tolui precisa de seu yurt inicial");
 			}
 		}
+		componentes.validarPreparacao(tabuleiro, jogadores);
 		this.tabuleiro = tabuleiro;
 		this.jogadores = Collections.unmodifiableList(new ArrayList<>(jogadores));
 		this.componentes = componentes;
@@ -64,6 +65,7 @@ class Partida {
 		prepararJogadores();
 		prepararCidades(random);
 		turno = novoTurno(1);
+		componentes.preparar(this);
 	}
 
 	private void prepararEstoque() {
@@ -230,18 +232,21 @@ class Partida {
 		return recursos(TipoTributo.ESPADA) >= custo && (cidade.getTesouros() != 1 || jogador.temYurtDisponivel());
 	}
 	boolean atacarCidade(String nome) {
-		if (!podeAtacarCidade(nome)) return false;
+		return atacarCidade(nome, null);
+	}
+	boolean atacarCidade(String nome, TipoTesouro tipo) {
+		if (!podeAtacarCidade(nome) || !componentes.podeReceberTesouro(cidade(nome), tipo)) return false;
 		Cidade cidade = cidade(nome);
 		int custo = turno.ataquesNaCidade(cidade) == 0 ? 1 : 2;
 		gastarTributo(TipoTributo.ESPADA, custo);
 		turno.registrarAtaque(cidade);
-		tomarTesouro(cidade);
+		tomarTesouro(cidade, tipo);
 		turno.registrarAcaoDoPeao();
 		concluirAcao();
 		return true;
 	}
 
-	private void tomarTesouro(Cidade cidade) {
+	private void tomarTesouro(Cidade cidade, TipoTesouro tipo) {
 		Jogador jogador = getJogadorDaVez();
 		boolean conquista = cidade.getTesouros() == 1;
 		cidade.retirarTesouro(jogador.getCor());
@@ -250,7 +255,7 @@ class Partida {
 			jogador.retirarYurtDoEstoque();
 			if (!cidadesFechadas.isEmpty()) cidadesFechadas.removeFirst().revelar();
 		}
-		componentes.receberTesouro(jogador, cidade);
+		componentes.receberTesouro(jogador, cidade, tipo);
 	}
 
 	boolean moverKhanParaProvincia(String nome) {
@@ -291,12 +296,16 @@ class Partida {
 	}
 
 	boolean pegarTesouroComMoeda(String nome) {
+		return pegarTesouroComMoeda(nome, null);
+	}
+	boolean pegarTesouroComMoeda(String nome, TipoTesouro tipo) {
 		Cidade cidade = cidade(nome);
 		if (!emAndamento() || getJogadorDaVez().getHerdeiro() != Herdeiro.OGEDEI || turno.habilidadeUsada()
-				|| cidade == null || !cidade.podeSerAtacada() || cidade.getTesouros() < 2 || recursos(TipoTributo.MOEDA) < 1) return false;
+				|| cidade == null || !cidade.podeSerAtacada() || cidade.getTesouros() < 2 || recursos(TipoTributo.MOEDA) < 1
+				|| !componentes.podeReceberTesouro(cidade, tipo)) return false;
 		gastarTributo(TipoTributo.MOEDA, 1);
 		turno.usarHabilidade();
-		tomarTesouro(cidade);
+		tomarTesouro(cidade, tipo);
 		concluirAcao();
 		return true;
 	}

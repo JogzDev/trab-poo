@@ -21,6 +21,7 @@ final class Turno {
 	private final Set<Parada> visitadas = new HashSet<>();
 	private final Map<Cidade, Integer> ataquesPorCidade = new HashMap<>();
 	private final Map<TipoTributo, Integer> virtuais = new EnumMap<>(TipoTributo.class);
+	private final Map<TipoTesouro, Integer> tesourosVirtuais = new EnumMap<>(TipoTesouro.class);
 
 	Turno(int numero, Peao peao, Parada posicaoInicial) {
 		this.numero = numero;
@@ -39,6 +40,17 @@ final class Turno {
 	boolean peaoJaAgiu() { return peaoAgiu; }
 	boolean habilidadeUsada() { return habilidadeUsada; }
 	int getRecursoVirtual(TipoTributo tipo) { return virtuais.getOrDefault(tipo, 0); }
+	int getTesouroVirtual(TipoTesouro tipo) { return tesourosVirtuais.getOrDefault(tipo, 0); }
+	void adicionarTesouroVirtual(TipoTesouro tipo) {
+		if (tipo == null) throw new IllegalArgumentException("Tipo de tesouro obrigatório");
+		tesourosVirtuais.put(tipo, getTesouroVirtual(tipo) + 1);
+	}
+	int usarTesouroVirtual(TipoTesouro tipo, int quantidade) {
+		if (tipo == null || quantidade < 0) throw new IllegalArgumentException("Tesouro e quantidade válidos obrigatórios");
+		int usadas = Math.min(quantidade, getTesouroVirtual(tipo));
+		tesourosVirtuais.put(tipo, getTesouroVirtual(tipo) - usadas);
+		return usadas;
+	}
 	Set<Parada> getParadasVisitadas() {
 		return Collections.unmodifiableSet(new HashSet<>(visitadas));
 	}

@@ -2,15 +2,18 @@
 
 A parte 3 controla a partida no Model: preparação, turnos, ativação, movimento, coleta, ataques, yurts, Khan, tributos e sequência de encerramento.
 
-`ComponentesPartida` é uma **proposta provisória**, usada nesta contribuição para demonstrar a ligação com cartas, tesouros, melhorias, bônus e entregas. O contrato precisa ser alinhado com a Pessoa 2 antes da integração na `main`; não impõe uma arquitetura já aprovada para a parte 2. O PR permanece draft até esse alinhamento. As assinaturas abaixo descrevem a proposta atual e podem ser ajustadas em conjunto.
+`ComponentesPartida` começou como proposta da parte 3 e agora possui a implementação `ComponentesKhan`, da parte 2. Os métodos padrão preservam os testes isolados anteriores. Consulte [parte2-integracao.md](parte2-integracao.md) para a configuração e as ações dos componentes.
 
 ## Contratos dos componentes
 
 | Operação | Responsabilidade proposta |
 |---|---|
-| `preparacaoConcluida()` | Confirmar que todos resolveram as escolhas iniciais exigidas, incluindo conselheiro secreto e melhoria inicial de Jochi. |
+| `validarPreparacao(Tabuleiro, List<Jogador>)` | Validar os componentes antes de alterar peças e jogadores. |
+| `preparar(Partida)` | Distribuir cartas, melhorias e tesouros após preparar o tabuleiro; Jochi recebe melhoria aleatória. |
+| `preparacaoConcluida()` | Confirmar que todos escolheram seu conselheiro secreto. |
 | `efeitosDasMelhorias(Jogador, Coluna, int)` | Retornar `EfeitosColuna` com cavalos, mãos e tributos virtuais da coluna, respeitando o turno de aquisição. Uma melhoria comprada neste turno não pode produzir ações nele. |
-| `receberTesouro(Jogador, Cidade)` | Registrar o tesouro no inventário tipado do jogador. O callback ocorre após a retirada do contador da cidade e a eventual revelação da próxima; a parte 2 conserva a sequência dos tipos para identificar a peça retirada. |
+| `podeReceberTesouro(Cidade, TipoTesouro)` | Consultar disponibilidade e sincronização antes de gastar recursos. `null` permite escolha automática. |
+| `receberTesouro(Jogador, Cidade, TipoTesouro)` | Transferir o tipo escolhido após retirar uma peça do contador. A assinatura anterior continua disponível para os testes isolados. |
 | `aposAcao(Partida)` | Avaliar as cartas abertas imediatamente após a ativação e após ações bem-sucedidas. Uma condição satisfeita por recursos virtuais concede o voto antes que eles sejam gastos. |
 | `moverKhanParaMelhorias(Partida)` | Repor os espaços de melhorias e conceder tributos dos ícones expostos ao jogador da vez, usando os auxiliares de banco da partida recebida. Se retornar `false`, preservar todos os estados e recursos. |
 | `temEscolhaPendente(Jogador)` | Informar escolhas obrigatórias que impedem o encerramento do turno, como uma recompensa gratuita ou o tesouro de um bônus. |
@@ -18,7 +21,7 @@ A parte 3 controla a partida no Model: preparação, turnos, ativação, movimen
 
 `EfeitosColuna` transporta as quantidades adicionais de cavalos e mãos e um `Map<TipoTributo, Integer>` de tributos virtuais. Tesouros virtuais exigem representação própria na parte 2: não pertencem ao enum de tributos, que contém apenas moeda, espada e yurt.
 
-Os componentes base permitem iniciar uma partida para testar o subconjunto disponível. Essa preparação base não comprova a presença de cartas ou melhorias. Sem a parte 2, estão disponíveis apenas os votos já obtidos, sem influência ou conselheiro secreto. A identificação final do vencedor e os desempates ainda dependem dessa integração. `getTesourosRecebidos(Jogador)` é um contador acumulado de recebimentos; não representa o saldo de tesouros não entregues para desempate.
+Os componentes base permitem iniciar uma partida para testar o subconjunto disponível. Essa preparação base não comprova a presença de cartas ou melhorias. Com `ComponentesKhan`, a pontuação final e os desempates usam o inventário da parte 2. `getTesourosRecebidos(Jogador)` continua sendo um contador acumulado de recebimentos; não representa o saldo de tesouros não entregues para desempate.
 
 ## Recursos e votos
 
@@ -30,7 +33,7 @@ Depois de uma ação própria bem-sucedida, a parte 2 chama `Partida.concluirAca
 
 `terminarTurno()` verifica Khan e escolhas pendentes antes de concluir. Ele recupera as fichas quando a coluna é branca e sincroniza votos e gatilhos, mas **não chama `aposAcao` novamente**: as cartas já foram avaliadas durante as ações. Assim, encerrar não abre uma nova escolha obrigatória nem repete uma recompensa.
 
-O tratamento de recompensas impossíveis por esgotamento completo das melhorias ainda precisa ser alinhado com a Pessoa 2. A proposta é não fabricar peças e impedir que uma recompensa sem peça disponível bloqueie indefinidamente o turno. Chamadas recusadas preservam o estado: a implementação valida antes de gastar ou retirar qualquer peça.
+`ComponentesKhan` não bloqueia o turno por melhoria gratuita quando mercado e pilha estão esgotados. Não fabrica peças. Chamadas recusadas preservam o estado: a implementação valida antes de gastar ou retirar qualquer peça. Tesouros virtuais ficam em `Turno`, separados dos tributos virtuais.
 
 ## Consultas de legalidade e movimento opcional
 
