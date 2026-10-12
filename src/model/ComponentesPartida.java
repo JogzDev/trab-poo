@@ -1,14 +1,17 @@
 package model;
 
 /**
- * Proposta provisória de integração da parte 2 com a partida. O contrato precisa
- * ser alinhado com a Pessoa 2 antes da integração na main; não impõe uma
- * arquitetura já aprovada para cartas, melhorias ou tesouros tipados.
- * Os métodos padrão permitem testar somente as regras das partes 1 e 3.
- * Na integração completa, as escolhas iniciais ficam pendentes até todos
- * escolherem a carta secreta e Jochi escolher sua melhoria.
+ * Contrato entre a partida e os componentes de cartas, melhorias e tesouros.
+ * ComponentesKhan implementa a parte 2. Os métodos padrão permitem continuar
+ * testando isoladamente as regras das partes 1 e 3.
+ * Na integração, cada jogador escolhe sua carta secreta; Jochi recebe uma
+ * melhoria aleatória inicial na coluna branca.
  */
 interface ComponentesPartida {
+	/** Valida a configuração antes de alterar os jogadores e as cidades. */
+	default void validarPreparacao(Tabuleiro tabuleiro, java.util.List<Jogador> jogadores) { }
+	/** Inicializa cartas e peças depois da preparação do tabuleiro. */
+	default void preparar(Partida partida) { }
 	default boolean preparacaoConcluida() { return true; }
 
 	/** Só os acréscimos; as ações impressas no herdeiro são somadas pela Partida. */
@@ -21,6 +24,10 @@ interface ComponentesPartida {
 	 * A parte 2 mantém a sequência dos tipos sincronizada com Cidade.getTesouros().
 	 */
 	default void receberTesouro(Jogador jogador, Cidade cidade) { }
+	default boolean podeReceberTesouro(Cidade cidade, TipoTesouro tipo) { return tipo == null; }
+	default void receberTesouro(Jogador jogador, Cidade cidade, TipoTesouro tipo) {
+		receberTesouro(jogador, cidade);
+	}
 
 	/** Avalia cartas abertas, inclusive imediatamente após ativar uma coluna. */
 	default void aposAcao(Partida partida) { }

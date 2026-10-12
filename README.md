@@ -84,7 +84,8 @@ testes de `MapaOficialTest` continuam valendo. Veja `docs/mapa-manual.jpg`.
 ```
 
 Compila `src/` e `test/` com `javac` e roda `org.junit.runner.JUnitCore`.
-Resultado atual: 29 testes, todos passando.
+Resultado atual: **146 testes, todos passando** (29 da parte 1, 46 da parte 2 e 71 da parte 3).
+O script respeita `JAVA_HOME`; use um JDK 17 ou superior, como o incluído no Eclipse.
 
 ## Testes (JUnit 4)
 
@@ -115,8 +116,19 @@ Esta contribuição acrescenta `Partida`, `Turno`, `Fase`, `Movimento` e os test
 - `moverPor(List<String>, List<Boolean>)` permite escolher em cada passagem intermediária se o peão salta o yurt próprio ou visita a parada pagando um cavalo. Assim, passar por um yurt pode habilitar coleta, ataque ou construção quando o jogador optar pela visita.
 - A branca recupera todas as fichas para o próximo turno. O fim termina a rodada atual e permite mais uma rodada completa.
 
-`ComponentesPartida` e `EfeitosColuna` são uma **proposta provisória de integração** com cartas, melhorias, bônus e tesouros. O contrato ainda precisa ser alinhado com a Pessoa 2 antes de integrar a contribuição na `main`; não define a arquitetura da parte 2 como decisão já aprovada. A contribuição permanece em PR draft até esse alinhamento.
+`ComponentesPartida` e `EfeitosColuna` ligam a partida à implementação da parte 2, `ComponentesKhan`. Os métodos padrão continuam disponíveis para testar isoladamente as partes 1 e 3. A integração acrescenta preparação dos componentes e seleção do tipo de tesouro nos ataques, preservando as assinaturas anteriores.
 
-Esta versão reúne as partes 1 e 3 e seus contratos propostos; não implementa o jogo completo. A implementação base dos componentes serve para testar o subconjunto disponível e não calcula influência por melhorias, cartas secretas ou desempates finais. As limitações do mapa descritas acima continuam válidas.
+O construtor simples de `Partida` mantém o subconjunto das partes 1 e 3. Ao fornecer `ComponentesKhan`, a partida também usa cartas, tesouros, melhorias, entregas, bônus, influência regional e desempates finais. As limitações do mapa descritas acima continuam válidas; a configuração física das melhorias por cor e dos conselheiros deve ser fornecida explicitamente.
 
-Consulte [docs/parte3-integracao.md](docs/parte3-integracao.md) para a proposta, as consultas e as escolhas de movimento, e [docs/testes-parte3.md](docs/testes-parte3.md) para os testes. Execute `./scripts/run_tests.sh` com JDK 17 ou superior, ou rode `TodosOsTestes` como JUnit Test no Eclipse. A contagem de 29 testes na seção original refere-se à base da parte 1. A suíte ampliada desta revisão passou no runner com JDK 17: **100 testes, zero falhas** (29 da base e 71 da parte 3).
+Consulte [docs/parte3-integracao.md](docs/parte3-integracao.md) para os contratos, consultas e escolhas de movimento, e [docs/testes-parte3.md](docs/testes-parte3.md) para os 71 testes dessa parte.
+
+## Parte 2: cartas, tesouros, melhorias e votos
+
+- `Carta`, `Baralho`, `CartasOficiais`, `Objetivo`, `ObjetivoMapa` e `ObjetivoRecursos`: os 14 conselheiros abertos e 10 secretos; escolha inicial, distribuição por jogador e descarte sem reposição.
+- `Inventario`, `Melhoria`, `TipoTesouro`, `TipoBonus` e `Conselheiro`: peças físicas, efeitos virtuais, entregas e bônus de uso único.
+- `ComponentesKhan`: integra a preparação, as ações e as escolhas pendentes à `Partida`.
+- `Pontuacao`: influência por maioria regional, cartas secretas e desempates por tesouros não entregues e distância da capital.
+
+O catálogo de cores das 44 melhorias não foi inventado a partir do PDF monocromático: a lista de peças e os pedidos/bônus dos conselheiros entram como configuração. Veja os dados pendentes, as interpretações de casos ambíguos e exemplos de uso em [docs/parte2-integracao.md](docs/parte2-integracao.md). Os testes novos estão documentados em [docs/testes-parte2.md](docs/testes-parte2.md).
+
+No Eclipse, atualize o projeto com **F5** e execute `test/model/TodosOsTestes.java` em **Run As > JUnit Test**. No terminal, use `JAVA_HOME="/caminho/do/jdk" ./scripts/run_tests.sh`. Validação desta revisão: **146 testes, zero falhas**, compilados com `--release 17` usando o JDK 25 do Eclipse.
