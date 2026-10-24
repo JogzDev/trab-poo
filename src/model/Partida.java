@@ -344,9 +344,14 @@ class Partida {
 		return true;
 	}
 
+	/** Consulta: há coluna ativada, o Khan foi resolvido e não há escolha obrigatória pendente. */
+	boolean podeTerminarTurno() {
+		return emAndamento() && turno.getColuna() != null && !turno.isKhanPendente()
+				&& !componentes.temEscolhaPendente(getJogadorDaVez());
+	}
+
 	boolean terminarTurno() {
-		if (!emAndamento() || turno.getColuna() == null || turno.isKhanPendente()
-				|| componentes.temEscolhaPendente(getJogadorDaVez())) return false;
+		if (!podeTerminarTurno()) return false;
 		if (turno.recuperaFichas()) getJogadorDaVez().recuperarFichas();
 		// As cartas já foram avaliadas nas ações. Não abrir novas escolhas aqui.
 		sincronizarVotosEGatilhos();

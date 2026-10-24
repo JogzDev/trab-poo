@@ -3,6 +3,7 @@ package model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Fachada pública do Model (padrões Facade e Singleton, INF1636 cap. 17).
@@ -22,12 +23,29 @@ import java.util.List;
  */
 public final class ModelAPI implements ObservadoIF {
 
+	/** Local do Khan fora das províncias: a área de melhorias (manual, p. 9). */
+	public static final String AREA_MELHORIAS = Partida.AREA_MELHORIAS;
+
 	private static ModelAPI instancia = null;
 
 	private final List<ObservadorIF> observadores = new ArrayList<>();
 	private Partida partida;
 
 	private ModelAPI() {
+	}
+
+	/**
+	 * Componentes usados pela tela da 2ª iteração. As cartas e melhorias ainda
+	 * não aparecem na interface; mover o Khan para a área de melhorias é uma
+	 * jogada válida e, sem peças de melhoria em jogo, não há o que repor.
+	 * Quando a parte das melhorias entrar na tela, a fachada passa a usar
+	 * ComponentesKhan com as peças configuradas.
+	 */
+	private static final class ComponentesDaTela implements ComponentesPartida {
+		@Override
+		public boolean moverKhanParaMelhorias(Partida partida) {
+			return true;
+		}
 	}
 
 	public static ModelAPI getInstance() {
@@ -90,7 +108,7 @@ public final class ModelAPI implements ObservadoIF {
 				}
 				jogadores.add(new Jogador(nomes.get(i), Cor.values()[i], herdeiro));
 			}
-			Partida nova = new Partida(MapaOficial.criar(), jogadores);
+			Partida nova = new Partida(MapaOficial.criar(), jogadores, new ComponentesDaTela(), new Random());
 			if (!nova.iniciar()) {
 				return false;
 			}
@@ -322,36 +340,57 @@ public final class ModelAPI implements ObservadoIF {
 		return emAndamento() && partida.getTurno().isKhanPendente();
 	}
 
-	/** Província onde o Khan está; null antes do primeiro movimento dele. */
+	/** Local onde o Khan está (província ou AREA_MELHORIAS); null antes do primeiro movimento. */
 	public String getPosicaoKhan() {
 		return partida == null ? null : partida.getPosicaoKhan();
 	}
 
-	/** Províncias do Khan para onde ele pode ir agora (nunca a atual). */
-	public List<String> getDestinosDoKhan() {
+	/**
+	 * Todos os locais que o Khan pode ocupar: as províncias do Khan, em ordem
+	 * alfabética, e AREA_MELHORIAS. São os locais clicáveis do Khan no mapa.
+	 */
+	public List<String> getLocaisDoKhan() {
 		List<String> nomes = new ArrayList<>();
-		if (isKhanPendente()) {
+		if (partida != null) {
 			for (Provincia p : partida.getTabuleiro().provinciasDoKhan()) {
-				if (!p.getNome().equals(partida.getPosicaoKhan())) {
-					nomes.add(p.getNome());
-				}
+				nomes.add(p.getNome());
 			}
+			Collections.sort(nomes);
+			nomes.add(AREA_MELHORIAS);
 		}
-		Collections.sort(nomes);
 		return nomes;
 	}
 
-	public boolean moverKhan(String provincia) {
-		if (!isKhanPendente() || !partida.moverKhanParaProvincia(provincia)) {
+	/** Locais para onde o Khan pode ir agora: qualquer um de getLocaisDoKhan(), menos o atual. */
+	public List<String> getDestinosDoKhan() {
+		List<String> nomes = new ArrayList<>();
+		if (isKhanPendente()) {
+			for (String local : getLocaisDoKhan()) {
+				if (!local.equals(partida.getPosicaoKhan())) {
+					nomes.add(local);
+				}
+			}
+		}
+		return nomes;
+	}
+
+	/** Move o Khan para uma província do Khan ou para AREA_MELHORIAS. */
+	public boolean moverKhan(String local) {
+		if (!isKhanPendente() || local == null) {
+			return false;
+		}
+		boolean moveu = AREA_MELHORIAS.equals(local) ? partida.moverKhanParaMelhorias()
+				: partida.moverKhanParaProvincia(local);
+		if (!moveu) {
 			return false;
 		}
 		notificar();
 		return true;
 	}
 
-	/** Exige uma coluna ativada e o Khan resolvido. */
+	/** Exige coluna ativada, Khan resolvido e nenhuma escolha obrigatória pendente. */
 	public boolean podeTerminarTurno() {
-		return emAndamento() && partida.getTurno().getColuna() != null && !isKhanPendente();
+		return partida != null && partida.podeTerminarTurno();
 	}
 
 	public boolean terminarTurno() {
