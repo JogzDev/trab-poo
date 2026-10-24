@@ -161,7 +161,7 @@ public class ModelAPITest {
 	/**
 	 * Objetivo: exigir o movimento do Khan antes de terminar o turno.
 	 * Entrada: Ogedei ativa a amarela (Khan); tenta terminar; tenta província comum; move para Khan do Noroeste.
-	 * Saída esperada: término recusado até o Khan ir para uma das quatro províncias dele; depois a vez passa a Bia.
+	 * Saída esperada: término recusado até o Khan ir para um local do Khan; depois a vez passa a Bia.
 	 */
 	@Test(timeout = TEMPO_LIMITE)
 	public void khanPendenteImpedeTerminarTurno() {
@@ -169,7 +169,7 @@ public class ModelAPITest {
 		assertTrue("A amarela de Ogedei obriga a mover o Khan", api.isKhanPendente());
 		assertFalse("Não pode terminar com o Khan pendente", api.podeTerminarTurno());
 		assertFalse("Terminar deve ser recusado", api.terminarTurno());
-		assertEquals("Quatro províncias do Khan disponíveis", 4, api.getDestinosDoKhan().size());
+		assertEquals("Quatro províncias do Khan e a área de melhorias", 5, api.getDestinosDoKhan().size());
 		assertFalse("Província comum não recebe o Khan", api.moverKhan("Estepe de Kiev"));
 		assertTrue("Província do Khan deve ser aceita", api.moverKhan("Khan do Noroeste"));
 		assertEquals("Posição do Khan", "Khan do Noroeste", api.getPosicaoKhan());
@@ -224,5 +224,39 @@ public class ModelAPITest {
 		api.remove(contador);
 		api.ativarColuna("VERMELHA");
 		assertEquals("Observador removido não é notificado", 0, contador.notificacoes);
+	}
+
+	/**
+	 * Objetivo: expor os locais clicáveis do Khan no mapa.
+	 * Entrada: consulta com a partida recém-criada.
+	 * Saída esperada: as quatro províncias do Khan em ordem alfabética e, por último, a área de melhorias.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void locaisDoKhanIncluemAreaDeMelhorias() {
+		List<String> locais = api.getLocaisDoKhan();
+		assertEquals("Quatro províncias e a área de melhorias", 5, locais.size());
+		assertEquals("A área de melhorias vem por último", ModelAPI.AREA_MELHORIAS, locais.get(4));
+		assertTrue("Província do Khan é um local do Khan", locais.contains("Khan do Noroeste"));
+		assertFalse("Província comum não é local do Khan", locais.contains("Estepe de Kiev"));
+		assertTrue("Sem Khan pendente não há destinos", api.getDestinosDoKhan().isEmpty());
+	}
+
+	/**
+	 * Objetivo: permitir mover o Khan para a área de melhorias (manual, p. 9) e não deixá-lo ficar onde está.
+	 * Entrada: Ogedei ativa a amarela e move o Khan para a área; Bia ativa a vermelha (Khan) e tenta a área de novo.
+	 * Saída esperada: primeiro movimento aceito; no turno de Bia a área sai dos destinos e o movimento é recusado.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void khanPodeIrParaAreaDeMelhorias() {
+		api.ativarColuna("AMARELA");
+		assertTrue("A área de melhorias é destino do Khan", api.getDestinosDoKhan().contains(ModelAPI.AREA_MELHORIAS));
+		assertTrue("Mover para a área deve ser aceito", api.moverKhan(ModelAPI.AREA_MELHORIAS));
+		assertEquals("Posição do Khan", ModelAPI.AREA_MELHORIAS, api.getPosicaoKhan());
+		assertTrue("Com o Khan resolvido o turno pode terminar", api.podeTerminarTurno());
+		assertTrue("Ana termina o turno", api.terminarTurno());
+		assertTrue("A vermelha de Chagatai obriga a mover o Khan", api.ativarColuna("VERMELHA") && api.isKhanPendente());
+		assertEquals("Só as quatro províncias continuam disponíveis", 4, api.getDestinosDoKhan().size());
+		assertFalse("O Khan não pode ficar onde está", api.moverKhan(ModelAPI.AREA_MELHORIAS));
+		assertTrue("A obrigação continua pendente", api.isKhanPendente());
 	}
 }
