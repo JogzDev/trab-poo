@@ -3,7 +3,7 @@ package model;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-/** Suíte JUnit 4 dos cenários das três partes do Model. */
+/** Suíte JUnit 4 do Model (1ª iteração) e da fachada pública (2ª iteração). */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
 	JogadorTest.class,
@@ -20,7 +20,8 @@ import org.junit.runners.Suite;
 	ObjetivosTest.class,
 	InventarioTest.class,
 	ComponentesKhanTest.class,
-	PontuacaoTest.class
+	PontuacaoTest.class,
+	ModelAPITest.class
 })
 public class TodosOsTestes {
 }

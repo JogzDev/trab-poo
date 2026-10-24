@@ -1,0 +1,228 @@
+package model;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+/** Testes da fachada pública usada pela View e pelo Controller (2ª iteração). */
+public class ModelAPITest {
+	static final int TEMPO_LIMITE = 1000;
+
+	private final ModelAPI api = ModelAPI.getInstance();
+	private final Contador contador = new Contador();
+
+	/** Observador de teste que conta as notificações recebidas. */
+	private static final class Contador implements ObservadorIF {
+		int notificacoes;
+		ObservadoIF ultimo;
+		@Override public void notify(ObservadoIF o) {
+			notificacoes++;
+			ultimo = o;
+		}
+	}
+
+	@Before
+	public void prepararPartida() {
+		assertTrue("A partida de Ogedei e Chagatai deve ser criada",
+				api.novaPartida(Arrays.asList("Ana", "Bia"), Arrays.asList("OGEDEI", "CHAGATAI")));
+		api.add(contador);
+	}
+
+	@After
+	public void removerObservador() {
+		api.remove(contador);
+	}
+
+	/**
+	 * Objetivo: garantir uma única instância da fachada.
+	 * Entrada: duas chamadas a getInstance().
+	 * Saída esperada: o mesmo objeto.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void fachadaEhSingleton() {
+		assertSame("getInstance deve devolver sempre a mesma fachada", api, ModelAPI.getInstance());
+	}
+
+	/**
+	 * Objetivo: preparar a partida no mapa oficial com os peões na capital.
+	 * Entrada: Ana (Ogedei) e Bia (Chagatai).
+	 * Saída esperada: cores AZUL e VERDE, peões em Karakorum, vez de Ana e quatro colunas livres.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void novaPartidaPosicionaPeoesEmKarakorum() {
+		assertEquals("Número de jogadores", 2, api.getNumJogadores());
+		assertEquals("Cor do primeiro jogador", "AZUL", api.getCorJogador(0));
+		assertEquals("Cor do segundo jogador", "VERDE", api.getCorJogador(1));
+		assertEquals("Herdeiro do segundo jogador", "CHAGATAI", api.getHerdeiroJogador(1));
+		assertEquals("Peão de Ana deve começar na capital", "Karakorum", api.getPosicaoPeao(0, 0));
+		assertEquals("Peão de Bia deve começar na capital", "Karakorum", api.getPosicaoPeao(1, 0));
+		assertEquals("O primeiro jogador começa", 0, api.getJogadorDaVez());
+		assertEquals("Colunas livres no início", Arrays.asList("VERMELHA", "VERDE", "AMARELA", "BRANCA"),
+				api.getColunasDisponiveis());
+	}
+
+	/**
+	 * Objetivo: recusar configurações inválidas sem perder a partida atual.
+	 * Entrada: herdeiro repetido, herdeiro inexistente, um único jogador e listas de tamanhos diferentes.
+	 * Saída esperada: todas recusadas, partida anterior intacta e nenhuma notificação.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void configuracaoInvalidaEhRecusada() {
+		assertFalse("Herdeiro repetido", api.novaPartida(Arrays.asList("A", "B"), Arrays.asList("JOCHI", "JOCHI")));
+		assertFalse("Herdeiro inexistente", api.novaPartida(Arrays.asList("A", "B"), Arrays.asList("JOCHI", "GENGHIS")));
+		assertFalse("Um único jogador", api.novaPartida(List.of("A"), List.of("JOCHI")));
+		assertFalse("Listas de tamanhos diferentes", api.novaPartida(Arrays.asList("A", "B"), List.of("JOCHI")));
+		assertEquals("A partida anterior deve ser mantida", "Ana", api.getNomeJogador(0));
+		assertEquals("Configurações recusadas não notificam", 0, contador.notificacoes);
+	}
+
+	/**
+	 * Objetivo: expor a geografia necessária para desenhar o mapa.
+	 * Entrada: consultas sobre Karakorum, Kiev e nomes inexistentes.
+	 * Saída esperada: 39 paradas, 9 cidades, cinco rotas da capital e valores nulos para nomes inválidos.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void mapaEhConsultavelPorNomes() {
+		assertEquals("Paradas do mapa oficial", 39, api.getParadas().size());
+		assertEquals("Cidades do mapa oficial", 9, api.getCidades().size());
+		assertEquals("Tipo da capital", "KARAKORUM", api.getTipoParada("Karakorum"));
+		assertNull("Karakorum não pertence a região", api.getRegiaoParada("Karakorum"));
+		assertEquals("Tipo de parada de conselheiro", "DUPLA", api.getTipoParada("Conselheiro Norte"));
+		assertEquals("Região de Kiev Norte", "RUSSIA", api.getRegiaoParada("Kiev Norte"));
+		assertEquals("Rotas que saem da capital",
+				Arrays.asList("Cabul Norte", "Moscou Sul", "Pequim Oeste", "Samarcanda Leste", "Sarai Sul"),
+				api.getVizinhas("Karakorum"));
+		assertEquals("Anel de Kiev", Arrays.asList("Kiev Norte", "Kiev Oeste", "Kiev Sul"), api.getParadasDaCidade("Kiev"));
+		assertNull("Parada inexistente não tem tipo", api.getTipoParada("Atlântida"));
+		assertTrue("Parada inexistente não tem vizinhas", api.getVizinhas("Atlântida").isEmpty());
+	}
+
+	/**
+	 * Objetivo: impedir movimento antes de ativar uma coluna.
+	 * Entrada: pedir destinos e mover para uma vizinha da capital sem ativar.
+	 * Saída esperada: nenhum destino, movimento recusado e peão parado.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void semColunaAtivadaNaoHaMovimento() {
+		assertEquals("Sem coluna ativada não há cavalos", 0, api.getCavalosRestantes());
+		assertTrue("Sem cavalos não há destinos", api.getDestinosPossiveis().isEmpty());
+		assertFalse("Movimento sem cavalos deve ser recusado", api.moverPara("Moscou Sul"));
+		assertEquals("O peão deve continuar na capital", "Karakorum", api.getPosicaoPeao(0, 0));
+	}
+
+	/**
+	 * Objetivo: liberar os cavalos da coluna ativada e calcular os destinos.
+	 * Entrada: Ogedei ativa a vermelha (2 cavalos) e tenta ativar a verde no mesmo turno.
+	 * Saída esperada: 2 cavalos; destinos a um e a dois passos, sem a origem; segunda ativação recusada.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void colunaAtivadaLiberaCavalosEDestinos() {
+		assertTrue("A vermelha deve ser ativada", api.ativarColuna("VERMELHA"));
+		assertEquals("Coluna ativada", "VERMELHA", api.getColunaAtivada());
+		assertEquals("A vermelha de Ogedei dá dois cavalos", 2, api.getCavalosRestantes());
+		List<String> destinos = api.getDestinosPossiveis();
+		assertTrue("Vizinha da capital é destino", destinos.contains("Moscou Sul"));
+		assertTrue("Parada a dois passos é destino", destinos.contains("Moscou Leste"));
+		assertFalse("A origem não é destino", destinos.contains("Karakorum"));
+		assertFalse("Parada a três passos não é destino", destinos.contains("Kiev Norte"));
+		assertFalse("Só uma coluna por turno", api.ativarColuna("VERDE"));
+		assertEquals("A ativação notifica uma vez", 1, contador.notificacoes);
+		assertSame("O observado notificado é a fachada", api, contador.ultimo);
+	}
+
+	/**
+	 * Objetivo: mover o peão gastando cavalos e notificar a View.
+	 * Entrada: vermelha (2 cavalos); mover para Moscou Sul; depois tentar Kiev Norte com 1 cavalo.
+	 * Saída esperada: peão em Moscou Sul com 1 cavalo; segundo movimento recusado sem alterar nada.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void moverGastaCavalosENotifica() {
+		api.ativarColuna("VERMELHA");
+		assertTrue("Movimento para vizinha deve ser aceito", api.moverPara("Moscou Sul"));
+		assertEquals("Nova posição do peão", "Moscou Sul", api.getPosicaoPeao(0, 0));
+		assertEquals("Um cavalo gasto", 1, api.getCavalosRestantes());
+		assertEquals("Ativação e movimento notificam", 2, contador.notificacoes);
+		assertTrue("Com 1 cavalo é possível voltar à capital", api.getDestinosPossiveis().contains("Karakorum"));
+		assertFalse("Destino distante deve ser recusado", api.moverPara("Kiev Norte"));
+		assertEquals("Movimento recusado preserva a posição", "Moscou Sul", api.getPosicaoPeao(0, 0));
+		assertEquals("Movimento recusado preserva os cavalos", 1, api.getCavalosRestantes());
+		assertEquals("Movimento recusado não notifica", 2, contador.notificacoes);
+	}
+
+	/**
+	 * Objetivo: exigir o movimento do Khan antes de terminar o turno.
+	 * Entrada: Ogedei ativa a amarela (Khan); tenta terminar; tenta província comum; move para Khan do Noroeste.
+	 * Saída esperada: término recusado até o Khan ir para uma das quatro províncias dele; depois a vez passa a Bia.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void khanPendenteImpedeTerminarTurno() {
+		api.ativarColuna("AMARELA");
+		assertTrue("A amarela de Ogedei obriga a mover o Khan", api.isKhanPendente());
+		assertFalse("Não pode terminar com o Khan pendente", api.podeTerminarTurno());
+		assertFalse("Terminar deve ser recusado", api.terminarTurno());
+		assertEquals("Quatro províncias do Khan disponíveis", 4, api.getDestinosDoKhan().size());
+		assertFalse("Província comum não recebe o Khan", api.moverKhan("Estepe de Kiev"));
+		assertTrue("Província do Khan deve ser aceita", api.moverKhan("Khan do Noroeste"));
+		assertEquals("Posição do Khan", "Khan do Noroeste", api.getPosicaoKhan());
+		assertTrue("Agora o turno pode terminar", api.terminarTurno());
+		assertEquals("A vez passa para Bia", 1, api.getJogadorDaVez());
+		assertTrue("Bia começa sem coluna ativada", api.getColunaAtivada() == null);
+	}
+
+	/**
+	 * Objetivo: deixar Altani escolher o peão até a primeira ação de posição.
+	 * Entrada: Altani escolhe o peão 1, ativa a verde e vai a Moscou Sul.
+	 * Saída esperada: só o peão 1 se move e a escolha fica bloqueada depois do movimento.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void altaniEscolhePeaoAntesDeMover() {
+		api.novaPartida(Arrays.asList("Ana", "Bia"), Arrays.asList("Altani", "Tolui"));
+		assertEquals("Altani tem dois peões", 2, api.getNumPeoes(0));
+		assertTrue("Altani pode escolher o peão no início", api.podeEscolherPeao());
+		assertTrue("Escolha do segundo peão", api.escolherPeao(1));
+		assertEquals("Peão ativo", 1, api.getPeaoAtivo());
+		api.ativarColuna("VERDE");
+		assertTrue("O peão escolhido deve se mover", api.moverPara("Moscou Sul"));
+		assertEquals("O segundo peão foi para Moscou Sul", "Moscou Sul", api.getPosicaoPeao(0, 1));
+		assertEquals("O primeiro peão ficou na capital", "Karakorum", api.getPosicaoPeao(0, 0));
+		assertFalse("Depois de mover não se troca de peão", api.escolherPeao(0));
+	}
+
+	/**
+	 * Objetivo: não oferecer como destino uma parada simples ocupada por outro jogador.
+	 * Entrada: Ana termina em Moscou Sul; Bia (Chagatai) ativa a verde, com 1 cavalo.
+	 * Saída esperada: Moscou Sul fora dos destinos de Bia; Sarai Sul disponível.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void paradaSimplesOcupadaNaoEhDestino() {
+		api.ativarColuna("VERMELHA");
+		api.moverPara("Moscou Sul");
+		assertTrue("Ana termina o turno", api.terminarTurno());
+		assertTrue("Bia ativa a verde", api.ativarColuna("VERDE"));
+		List<String> destinos = api.getDestinosPossiveis();
+		assertFalse("Parada simples ocupada não é destino", destinos.contains("Moscou Sul"));
+		assertTrue("Parada livre vizinha é destino", destinos.contains("Sarai Sul"));
+		assertFalse("Mover para a parada ocupada deve ser recusado", api.moverPara("Moscou Sul"));
+	}
+
+	/**
+	 * Objetivo: parar de notificar um observador removido.
+	 * Entrada: remover o contador e ativar uma coluna.
+	 * Saída esperada: nenhuma notificação.
+	 */
+	@Test(timeout = TEMPO_LIMITE)
+	public void observadorRemovidoNaoEhNotificado() {
+		api.remove(contador);
+		api.ativarColuna("VERMELHA");
+		assertEquals("Observador removido não é notificado", 0, contador.notificacoes);
+	}
+}
