@@ -1,11 +1,11 @@
 package view;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,13 +13,10 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 
 import controller.Controlador;
 import model.ModelAPI;
@@ -29,14 +26,15 @@ import model.ObservadorIF;
 /**
  * Painel lateral do turno (2ª iteração, Parte 1).
  *
- * Mostra de quem é a vez e oferece as ações do turno que não dependem de
- * clicar no mapa: ativar uma coluna da cartela, escolher o peão (Altani),
- * mover o Khan quando a coluna exige e terminar o turno. O movimento do peão
- * é feito clicando no PainelTabuleiro.
+ * Mostra de quem é a vez e oferece as duas ações do turno que não são
+ * deslocamentos: ativar uma coluna da cartela e terminar o turno. Tudo o que
+ * se desloca no mapa (o peão, o Khan e a escolha do peão de Altani) é feito
+ * clicando no PainelTabuleiro; aqui aparecem só a situação e a dica do passo.
  *
  * Segue o padrão Observer do cap. 17: registra-se pelo Controlador e, a cada
  * notificação, consulta a ModelAPI para habilitar só as ações permitidas.
- * As ações passam sempre pelo Controlador; o painel não altera o Model.
+ * Os eventos dos botões são tratados por classes internas que implementam
+ * ActionListener (cap. 12); o enunciado não permite expressões lambda aqui.
  */
 public class PainelTurno extends JPanel implements ObservadorIF {
 
@@ -48,16 +46,34 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 	private final JLabel lbJogador = new JLabel(" ");
 	private final JLabel lbHerdeiro = new JLabel(" ");
 	private final JLabel lbRodada = new JLabel(" ");
-	private final Map<String, JButton> btColunas = new LinkedHashMap<>();
+	private final Map<String, JButton> btColunas = new LinkedHashMap<String, JButton>();
 	private final JLabel lbCavalos = new JLabel(" ");
-	private final JPanel pnPeoes = new JPanel(new GridLayout(1, 2, 6, 0));
-	private final JRadioButton[] rbPeoes = { new JRadioButton("Peão 1"), new JRadioButton("Peão 2") };
-	private final JPanel pnKhan = new JPanel(new BorderLayout(6, 6));
-	private final DefaultComboBoxModel<String> destinosKhan = new DefaultComboBoxModel<>();
-	private final JComboBox<String> cbKhan = new JComboBox<>(destinosKhan);
-	private final JButton btMoverKhan = new JButton("Mover Khan");
+	private final JLabel lbPeao = new JLabel(" ");
+	private final JLabel lbKhan = new JLabel(" ");
 	private final JButton btTerminar = new JButton("Terminar turno");
-	private final JLabel lbMensagem = new JLabel(" ");
+	private final JLabel lbDica = new JLabel(" ");
+
+	/** Ativa a coluna informada no construtor (um tratador por botão). */
+	private class AcaoColuna implements ActionListener {
+		private final String coluna;
+
+		AcaoColuna(String coluna) {
+			this.coluna = coluna;
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			Controlador.getInstance().ativarColuna(coluna);
+		}
+	}
+
+	/** Encerra o turno do jogador da vez. */
+	private class AcaoTerminarTurno implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			Controlador.getInstance().terminarTurno();
+		}
+	}
 
 	public PainelTurno() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -77,37 +93,23 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 			bt.setBorder(BorderFactory.createCompoundBorder(
 					BorderFactory.createMatteBorder(0, 8, 0, 0, CoresJogador.daColuna(coluna)),
 					BorderFactory.createEmptyBorder(6, 8, 6, 8)));
-			bt.addActionListener(e -> agir(Controlador.getInstance().ativarColuna(coluna)));
+			bt.addActionListener(new AcaoColuna(coluna));
 			btColunas.put(coluna, bt);
 			adicionar(bt);
 			add(Box.createVerticalStrut(4));
 		}
 		add(Box.createVerticalStrut(8));
 		adicionar(lbCavalos);
-		add(Box.createVerticalStrut(12));
-
-		ButtonGroup grupo = new ButtonGroup();
-		for (int i = 0; i < rbPeoes.length; i++) {
-			int peao = i;
-			grupo.add(rbPeoes[i]);
-			pnPeoes.add(rbPeoes[i]);
-			rbPeoes[i].addActionListener(e -> agir(Controlador.getInstance().escolherPeao(peao)));
-		}
-		pnPeoes.setBorder(BorderFactory.createTitledBorder("Peão que age"));
-		adicionar(pnPeoes);
 		add(Box.createVerticalStrut(8));
-
-		pnKhan.setBorder(BorderFactory.createTitledBorder("Mover o Khan"));
-		pnKhan.add(cbKhan, BorderLayout.CENTER);
-		pnKhan.add(btMoverKhan, BorderLayout.PAGE_END);
-		btMoverKhan.addActionListener(e -> agir(Controlador.getInstance().moverKhan((String) cbKhan.getSelectedItem())));
-		adicionar(pnKhan);
+		adicionar(lbPeao);
+		add(Box.createVerticalStrut(8));
+		adicionar(lbKhan);
 		add(Box.createVerticalStrut(12));
 
-		btTerminar.addActionListener(e -> agir(Controlador.getInstance().terminarTurno()));
+		btTerminar.addActionListener(new AcaoTerminarTurno());
 		adicionar(btTerminar);
 		add(Box.createVerticalStrut(8));
-		adicionar(lbMensagem);
+		adicionar(lbDica);
 		add(Box.createVerticalGlue());
 
 		Controlador.getInstance().registra(this);
@@ -136,7 +138,6 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 			lbJogador.setText("Partida encerrada");
 			lbJogador.setForeground(Color.DARK_GRAY);
 			habilitarTudo(false);
-			lbMensagem.setText(" ");
 			return;
 		}
 
@@ -149,40 +150,28 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 			bt.setEnabled(ativada == null && livres.contains(nome));
 		}
 		lbCavalos.setText(html(ativada == null ? "Nenhuma coluna ativada"
-				: "Coluna " + nomeLegivel(ativada) + ": " + m.getCavalosRestantes() + " cavalo(s) restante(s)", 200));
+				: nomeLegivel(ativada) + ": " + m.getCavalosRestantes() + " cavalo(s) restante(s)", 200));
 
-		boolean altani = m.getNumPeoes(vez) > 1;
-		pnPeoes.setVisible(altani);
-		if (altani) {
-			int ativo = m.getPeaoAtivo();
-			for (int i = 0; i < rbPeoes.length; i++) {
-				rbPeoes[i].setSelected(i == ativo);
-				rbPeoes[i].setEnabled(m.podeEscolherPeao());
+		if (m.getNumPeoes(vez) > 1) {
+			String texto = "Peão ativo: " + (m.getPeaoAtivo() + 1);
+			if (m.podeEscolherPeao()) {
+				texto += ". Para trocar, clique no outro peão no mapa.";
 			}
+			lbPeao.setText(html(texto, 200));
+			lbPeao.setVisible(true);
+		} else {
+			lbPeao.setVisible(false);
 		}
 
 		boolean khan = m.isKhanPendente();
-		pnKhan.setVisible(khan);
-		destinosKhan.removeAllElements();
-		for (String provincia : m.getDestinosDoKhan()) {
-			destinosKhan.addElement(provincia);
-		}
-		btMoverKhan.setEnabled(khan && destinosKhan.getSize() > 0);
+		lbKhan.setText(html(khan ? "<b>Khan:</b> clique num local do Khan no mapa."
+				: "Khan: " + localDoKhan(m.getPosicaoKhan()), 200));
 
 		btTerminar.setEnabled(m.podeTerminarTurno());
-		lbMensagem.setText(dica(m, ativada, khan));
-		lbMensagem.setForeground(Color.DARK_GRAY);
+		lbDica.setText(dica(m, ativada, khan));
 
 		revalidate();
 		repaint();
-	}
-
-	/** Mostra um aviso quando o Controlador recusa a ação. */
-	private void agir(boolean aceita) {
-		if (!aceita) {
-			lbMensagem.setText(html("Jogada não permitida pelas regras.", 200));
-			lbMensagem.setForeground(new Color(180, 30, 30));
-		}
 	}
 
 	private static String dica(ModelAPI m, String ativada, boolean khan) {
@@ -198,23 +187,25 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		return html("Termine o turno quando quiser.", 200);
 	}
 
+	private static String localDoKhan(String posicao) {
+		if (posicao == null) {
+			return "fora do tabuleiro";
+		}
+		return ModelAPI.AREA_MELHORIAS.equals(posicao) ? "área de melhorias" : posicao;
+	}
+
 	private void habilitarTudo(boolean valor) {
 		for (JButton bt : btColunas.values()) {
 			bt.setEnabled(valor);
 		}
-		for (JRadioButton rb : rbPeoes) {
-			rb.setEnabled(valor);
-		}
-		btMoverKhan.setEnabled(valor);
 		btTerminar.setEnabled(valor);
-		pnKhan.setVisible(valor);
+		lbPeao.setVisible(valor);
+		lbDica.setText(" ");
 	}
 
-	private void adicionar(Component c) {
-		if (c instanceof javax.swing.JComponent) {
-			((javax.swing.JComponent) c).setAlignmentX(Component.LEFT_ALIGNMENT);
-		}
-		if (c instanceof JButton || c instanceof JPanel) {
+	private void adicionar(JComponent c) {
+		c.setAlignmentX(Component.LEFT_ALIGNMENT);
+		if (c instanceof JButton) {
 			c.setMaximumSize(new Dimension(Integer.MAX_VALUE, c.getPreferredSize().height + 40));
 		}
 		add(c);
