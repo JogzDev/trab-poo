@@ -13,13 +13,27 @@ Cada parte cria arquivos próprios, então os commits não entram em conflito.
 
 | Parte | Responsável | Arquivos | Depende de |
 |---|---|---|---|
-| 1. Fachada do Model + Observer | @JogzDev | `model/ModelAPI`, `model/ObservadorIF`, `model/ObservadoIF`, esqueleto de `controller/Controlador`, `test/model/ModelAPITest` | nada (já entregue) |
-| 2. Tabuleiro gráfico | a definir | `view/PainelTabuleiro`, `view/CoordenadasMapa` (e, se quiser, `view/CoresJogador`) | só do contrato abaixo |
-| 3. Fluxo do turno e janelas | a definir | `controller/Main`, `view/JanelaInicial`, `view/JanelaJogo`, `view/PainelTurno`, corpo dos métodos de `Controlador` | só do contrato abaixo |
+| 1. Fachada, Observer e painel do turno | @JogzDev | `model/ModelAPI`, `model/ObservadorIF`, `model/ObservadoIF`, esqueleto de `controller/Controlador`, `view/PainelTurno`, `view/CoresJogador`, `test/model/ModelAPITest` | nada (já entregue) |
+| 2. Tabuleiro gráfico | a definir | `view/PainelTabuleiro`, `view/CoordenadasMapa` | só do contrato abaixo |
+| 3. Janelas e fluxo do jogo | a definir | `controller/Main`, `view/JanelaInicial`, `view/JanelaJogo`, corpo dos métodos de `Controlador`, README da 2ª iteração | só do contrato abaixo |
 
 A Parte 1 já está pronta e testada (157 testes, zero falhas). Depois que ela
 for commitada, a Parte 2 e a Parte 3 podem trabalhar ao mesmo tempo, porque uma
 não usa nada da outra além de um construtor (`new PainelTabuleiro()`).
+
+### Parte 1: o que já está pronto
+
+- `ModelAPI`, `ObservadorIF` e `ObservadoIF`: descritos no contrato abaixo.
+- `Controlador`: Singleton com as assinaturas combinadas, repassando para a fachada.
+- `view.PainelTurno extends JPanel implements ObservadorIF` (largura `PainelTurno.LARGURA`):
+  jogador da vez, herdeiro e rodada; um botão por coluna com as ações impressas na
+  cartela, habilitado só se a ficha estiver livre e nenhuma coluna tiver sido
+  ativada; cavalos restantes; escolha de peão da Altani enquanto `podeEscolherPeao()`;
+  lista e botão para mover o Khan quando `isKhanPendente()`; botão "Terminar turno"
+  habilitado com `podeTerminarTurno()`; dica do próximo passo e aviso quando o
+  Controlador recusa uma ação.
+- `view.CoresJogador`: converte os nomes de cor de jogador e de coluna em `java.awt.Color`.
+  A Parte 2 deve usar essa classe para pintar os peões, assim as cores batem nos dois painéis.
 
 ### Parte 2: tabuleiro gráfico (`view.PainelTabuleiro`)
 
@@ -43,19 +57,20 @@ não usa nada da outra além de um construtor (`new PainelTabuleiro()`).
 - `notify(ObservadoIF o)`: só chama `repaint()`. O `paintComponent` lê o estado
   atual da `ModelAPI`.
 
-Para testar sozinho, sem a Parte 3, usar um `main` temporário:
+Para testar sozinho, sem a Parte 3, usar um `main` temporário. Com o
+`PainelTurno` ao lado, já dá para jogar turnos completos:
 
 ```java
 Controlador.getInstance().novaPartida(List.of("Ana", "Bia"), List.of("ALTANI", "OGEDEI"));
-ModelAPI.getInstance().ativarColuna("VERMELHA");
 JFrame f = new JFrame("Teste");
-f.add(new PainelTabuleiro());
+f.add(new PainelTabuleiro(), BorderLayout.CENTER);
+f.add(new PainelTurno(), BorderLayout.LINE_END);
 f.pack();
 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 f.setVisible(true);
 ```
 
-### Parte 3: fluxo do turno e janelas
+### Parte 3: janelas e fluxo do jogo
 
 - `controller.Main`: abre a `JanelaInicial`.
 - `view.JanelaInicial extends JFrame`: escolher de 2 a 5 jogadores, nome de cada um
@@ -63,17 +78,13 @@ f.setVisible(true);
   `Controlador.getInstance().novaPartida(nomes, herdeiros)`. Se devolver `false`,
   mostrar a mensagem e não fechar; se devolver `true`, abrir a `JanelaJogo`.
 - `view.JanelaJogo extends JFrame`: `BorderLayout`, com `new PainelTabuleiro()` no
-  `CENTER` e o `PainelTurno` no `LINE_END`.
-- `view.PainelTurno extends JPanel implements ObservadorIF`:
-  - jogador da vez, herdeiro e cor;
-  - um botão por coluna, habilitado só se estiver em `getColunasDisponiveis()` e
-    nenhuma coluna tiver sido ativada; o texto pode usar `getDescricaoColuna`;
-  - cavalos restantes;
-  - para Altani, botões "Peão 1" e "Peão 2", habilitados enquanto `podeEscolherPeao()`;
-  - quando `isKhanPendente()`, uma lista com `getDestinosDoKhan()` e o botão "Mover Khan";
-  - botão "Terminar turno", habilitado com `podeTerminarTurno()`.
-- `Controlador`: manter as assinaturas e completar o fluxo (mensagem quando uma
-  jogada é recusada, aviso de troca de turno, fim de partida).
+  `CENTER` e `new PainelTurno()` no `LINE_END`; título com o nome do jogo e
+  encerramento do programa ao fechar.
+- `Controlador`: manter as assinaturas e completar o fluxo. Avisar quando um clique
+  no mapa for recusado (`paradaClicada` devolveu `false`), anunciar a troca de
+  turno e tratar o fim da partida (`isPartidaEncerrada()`).
+- Atualizar o README para a 2ª iteração: como rodar o jogo pelo `controller.Main`
+  e o que a tela permite fazer.
 
 ## Contrato (não mudar sem avisar o grupo)
 
@@ -140,4 +151,4 @@ Cores: AZUL, VERDE, VERMELHO, AMARELO e PRETO, atribuídas na ordem dos jogadore
 1. Commit da Parte 1 (este).
 2. Partes 2 e 3 em paralelo, cada uma nos seus arquivos.
 3. Quem terminar por último junta tudo, roda `TodosOsTestes` e abre o jogo pelo `controller.Main`.
-4. Atualizar o `LEIA-ME-ENTREGA.txt` para a 2ª iteração antes de gerar o ZIP.
+4. Gerar o ZIP da entrega com o README atualizado pela Parte 3.
