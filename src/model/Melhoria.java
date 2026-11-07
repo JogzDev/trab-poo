@@ -24,6 +24,17 @@ final class Melhoria {
 		}
 		return null;
 	}
+	String getDescricao() {
+		switch (simbolo) {
+		case MOEDA: return "1 moeda virtual";
+		case ESPADA: return "1 espada virtual";
+		case YURT: return "1 tributo de yurt virtual";
+		case MAO: return "1 mão adicional";
+		case CAVALOS: return "2 cavalos adicionais";
+		default: return "1 tesouro virtual de " + simbolo.name();
+		}
+	}
+
 	EfeitosColuna getEfeitos() {
 		switch (simbolo) {
 		case MOEDA: return new EfeitosColuna(0, 0, Map.of(TipoTributo.MOEDA, 1));

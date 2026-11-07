@@ -35,6 +35,8 @@ final class ComponentesKhan implements ComponentesPartida {
 	private Partida partida;
 	private int turnoAtivado = -1;
 	private boolean pontuou;
+	private final Map<Jogador, Integer> votosInfluenciaFinal = new HashMap<>();
+	private final Map<Jogador, Integer> votosSecretosFinal = new HashMap<>();
 
 	ComponentesKhan(List<Melhoria> melhorias, List<Conselheiro> conselheiros, Random random) {
 		if (melhorias == null || conselheiros == null || random == null
@@ -176,28 +178,35 @@ final class ComponentesKhan implements ComponentesPartida {
 	}
 
 	/** Índice -1 compra do topo; demais índices vêm de getMercado(). */
-	boolean comprarMelhoria(int indice) {
+	boolean podeComprarMelhoria(int indice) {
 		if (!emAndamento()) return false;
 		Melhoria melhoria = consultarMelhoria(indice);
-		Inventario inventario = inventarioDe(partida.getJogadorDaVez());
-		if (melhoria == null || !inventario.cabeMelhoria(melhoria.getCor()) || !partida.gastarTributo(TipoTributo.MOEDA, 2)) return false;
+		Jogador jogador = partida.getJogadorDaVez();
+		return melhoria != null && inventarioDe(jogador).cabeMelhoria(melhoria.getCor())
+				&& jogador.contarTributo(TipoTributo.MOEDA) + partida.getTurno().getRecursoVirtual(TipoTributo.MOEDA) >= 2;
+	}
+	boolean comprarMelhoria(int indice) {
+		if (!podeComprarMelhoria(indice)) return false;
+		Melhoria melhoria = consultarMelhoria(indice);
+		partida.gastarTributo(TipoTributo.MOEDA, 2);
 		retirarMelhoria(indice);
-		inventario.adicionarMelhoria(melhoria, melhoria.getCor(), partida.getTurno().getNumero());
+		inventarioDe(partida.getJogadorDaVez()).adicionarMelhoria(melhoria, melhoria.getCor(), partida.getTurno().getNumero());
 		partida.concluirAcaoComplementar(false);
 		return true;
+	}
+	boolean podeEscolherMelhoriaGratuita(int indice) {
+		return emAndamento() && temMelhoriaPendente(partida.getJogadorDaVez()) && consultarMelhoria(indice) != null
+				&& inventarioDe(partida.getJogadorDaVez()).cabeMelhoria(Coluna.BRANCA);
 	}
 	boolean escolherMelhoriaGratuita(int indice) {
-		if (!emAndamento()) return false;
-		Jogador jogador = partida.getJogadorDaVez();
-		Inventario inventario = inventarioDe(jogador);
-		Melhoria melhoria = consultarMelhoria(indice);
-		if (!temMelhoriaPendente(jogador) || melhoria == null) return false;
-		retirarMelhoria(indice);
-		inventario.adicionarMelhoria(melhoria, Coluna.BRANCA, partida.getTurno().getNumero());
+		if (!podeEscolherMelhoriaGratuita(indice)) return false;
+		Melhoria melhoria = retirarMelhoria(indice);
+		inventarioDe(partida.getJogadorDaVez()).adicionarMelhoria(melhoria, Coluna.BRANCA, partida.getTurno().getNumero());
 		partida.concluirAcaoComplementar(false);
 		return true;
 	}
-	private boolean temMelhoriaPendente(Jogador jogador) {
+
+	boolean temMelhoriaPendente(Jogador jogador) {
 		Inventario inventario = inventarioDe(jogador);
 		return inventario.linhasCompletas() > inventario.contarMelhorias(Coluna.BRANCA)
 				&& (!mercado.isEmpty() || !pilhaMelhorias.isEmpty());
@@ -223,6 +232,16 @@ final class ComponentesKhan implements ComponentesPartida {
 	private Melhoria retirarMelhoria(int indice) { return indice == -1 ? retirarTopoMelhoria() : mercado.remove(indice); }
 	private Melhoria retirarTopoMelhoria() { return pilhaMelhorias.remove(pilhaMelhorias.size() - 1); }
 	private TipoTesouro retirarTopoTesouro() { return pilhaTesouros.remove(pilhaTesouros.size() - 1); }
+
+	List<Conselheiro> getConselheiros() {
+		List<Conselheiro> lista = new ArrayList<>(conselheiros.values());
+		lista.sort(Comparator.comparing(c -> c.getParada().getNome()));
+		return List.copyOf(lista);
+	}
+	Conselheiro getConselheiro(String nome) {
+		for (Conselheiro conselheiro : conselheiros.values()) if (conselheiro.getParada().getNome().equals(nome)) return conselheiro;
+		return null;
+	}
 
 	boolean podeEntregarTesouros(String nome, Map<TipoTesouro, Integer> oferta) {
 		if (!emAndamento() || !partida.getTabuleiro().existeParada(nome)) return false;
@@ -256,12 +275,16 @@ final class ComponentesKhan implements ComponentesPartida {
 		partida.concluirAcaoComplementar(true);
 		return true;
 	}
+	boolean podeUsarBonus(TipoBonus bonus) {
+		if (!emAndamento() || bonus == null || bonus == TipoBonus.VOTO) return false;
+		Jogador jogador = partida.getJogadorDaVez();
+		return inventarioDe(jogador).podeUsarBonus(bonus)
+				&& (bonus != TipoBonus.TESOURO || (!pilhaTesouros.isEmpty() && !escolhasTesouro.containsKey(jogador)));
+	}
 	boolean usarBonus(TipoBonus bonus) {
-		if (!emAndamento()) return false;
+		if (!podeUsarBonus(bonus)) return false;
 		Jogador jogador = partida.getJogadorDaVez();
 		Inventario inventario = inventarioDe(jogador);
-		if (bonus == null || bonus == TipoBonus.VOTO || !inventario.podeUsarBonus(bonus)) return false;
-		if (bonus == TipoBonus.TESOURO && (pilhaTesouros.isEmpty() || escolhasTesouro.containsKey(jogador))) return false;
 		inventario.usarBonus(bonus);
 		switch (bonus) {
 		case ESPADAS: partida.receberTributoDoEstoque(TipoTributo.ESPADA, 2); break;
@@ -298,12 +321,17 @@ final class ComponentesKhan implements ComponentesPartida {
 		if (pontuou || partida.getFase() != Fase.ENCERRADA) return;
 		for (Jogador jogador : partida.getJogadores()) {
 			Inventario inventario = inventarioDe(jogador);
-			int votos = Pontuacao.influencia(jogador, partida.getTabuleiro(), inventario);
-			for (Carta carta : secretas.cartasDe(jogador)) votos += carta.getObjetivo().votos(jogador, partida, inventario);
-			jogador.adicionarVotos(votos);
+			int influencia = Pontuacao.influencia(jogador, partida.getTabuleiro(), inventario);
+			int secretos = 0;
+			for (Carta carta : secretas.cartasDe(jogador)) secretos += carta.getObjetivo().votos(jogador, partida, inventario);
+			votosInfluenciaFinal.put(jogador, influencia);
+			votosSecretosFinal.put(jogador, secretos);
+			jogador.adicionarVotos(influencia + secretos);
 		}
 		pontuou = true;
 	}
+	int getVotosInfluenciaFinal(Jogador jogador) { return votosInfluenciaFinal.getOrDefault(jogador, 0); }
+	int getVotosSecretosFinal(Jogador jogador) { return votosSecretosFinal.getOrDefault(jogador, 0); }
 	List<Jogador> getVencedores() { return partida == null ? List.of() : Pontuacao.vencedores(partida, inventarios); }
 	private boolean emAndamento() { return partida != null && partida.getFase() == Fase.EM_ANDAMENTO; }
 	private void exigirPartida(Partida partida) {

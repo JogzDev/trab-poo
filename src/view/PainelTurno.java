@@ -46,6 +46,7 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 	private final JLabel lbJogador = new JLabel(" ");
 	private final JLabel lbHerdeiro = new JLabel(" ");
 	private final JLabel lbRodada = new JLabel(" ");
+	private final JLabel lbKurultai = new JLabel(" ");
 	private final Map<String, JButton> btColunas = new LinkedHashMap<String, JButton>();
 	private final JLabel lbCavalos = new JLabel(" ");
 	private final JLabel lbPeao = new JLabel(" ");
@@ -84,6 +85,7 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		adicionar(lbJogador);
 		adicionar(lbHerdeiro);
 		adicionar(lbRodada);
+		adicionar(lbKurultai);
 		add(Box.createVerticalStrut(12));
 
 		adicionar(titulo("Ativar coluna"));
@@ -132,12 +134,20 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		lbJogador.setText(m.getNomeJogador(vez));
 		lbJogador.setForeground(CoresJogador.doJogador(m.getCorJogador(vez)));
 		lbHerdeiro.setText("Herdeiro: " + nomeLegivel(m.getHerdeiroJogador(vez)));
-		lbRodada.setText("Rodada " + m.getRodada());
+		lbRodada.setText("Rodada " + m.getRodada() + (m.getRodadaFinal() >= 0 ? " — final: " + m.getRodadaFinal() : ""));
+		lbKurultai.setText("Kurultai: " + m.getPosicaoKurultai() + " / " + m.getLimiteKurultai());
+
+		if (m.isPreparacao()) {
+			lbJogador.setText("Preparando partida");
+			habilitarTudo(false);
+			return;
+		}
 
 		if (m.isPartidaEncerrada()) {
 			lbJogador.setText("Partida encerrada");
 			lbJogador.setForeground(Color.DARK_GRAY);
 			habilitarTudo(false);
+			lbDica.setText(html("Consulte o vencedor e a pontuação na aba Resultado.", 200));
 			return;
 		}
 
@@ -175,6 +185,12 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 	}
 
 	private static String dica(ModelAPI m, String ativada, boolean khan) {
+		if (m.isTesouroDoBonusPendente()) {
+			return html("Escolha o tesouro do bônus na aba Entregas antes de terminar o turno.", 200);
+		}
+		if (m.isMelhoriaGratuitaPendente()) {
+			return html("Escolha sua melhoria gratuita na aba Melhorias antes de terminar o turno.", 200);
+		}
 		if (ativada == null) {
 			return html("Escolha uma coluna para ativar.", 200);
 		}

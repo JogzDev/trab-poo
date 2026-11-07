@@ -21,7 +21,18 @@ import org.junit.runners.Suite;
 	InventarioTest.class,
 	ComponentesKhanTest.class,
 	PontuacaoTest.class,
-	ModelAPITest.class
+	ModelAPITest.class,
+	PreparacaoCompletaTest.class,
+	AcoesModelAPITest.class,
+	MelhoriasModelAPITest.class,
+	EntregasModelAPITest.class,
+	EncerramentoModelAPITest.class,
+	view.PreparacaoInterfaceTest.class,
+	view.AcoesInterfaceTest.class,
+	view.MelhoriasInterfaceTest.class,
+	view.EntregasInterfaceTest.class,
+	view.PartidaCompletaInterfaceTest.class,
+	view.RotaInterfaceTest.class
 })
 public class TodosOsTestes {
 }

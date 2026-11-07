@@ -1,6 +1,7 @@
 package controller;
 
 import java.util.List;
+import java.util.Map;
 
 import view.JanelaInicial;
 import view.JanelaJogo;
@@ -16,11 +17,9 @@ import model.ObservadorIF;
  * estes métodos para agir; para ler o estado, os observadores consultam a
  * ModelAPI recebida em notify (callback do padrão Observer).
  *
- * Esta versão apenas repassa as chamadas para a fachada do Model, para que a
- * Parte 2 (tabuleiro) e a Parte 3 (janelas e turno) possam trabalhar em
- * paralelo desde o início. A Parte 3 completa o fluxo: abrir as janelas,
- * ignorar cliques recusados e manter a troca de turno e o fim da partida
- * visíveis nos painéis, sem caixas de diálogo.
+ * Coordena abertura, preparação, escolhas obrigatórias, consulta de cartas
+ * e resultado. O Model valida as regras; as Views observadoras refletem o
+ * estado depois dos comandos aceitos.
  */
 public final class Controlador {
 
@@ -65,12 +64,25 @@ public final class Controlador {
 		return true;
 	}
 
+	/** Mantém a preparação visível até todos confirmarem uma carta secreta. */
+	public boolean novaPartidaCompleta(List<String> nomes, List<String> herdeiros, List<String> pecas) {
+		if (!model.novaPartidaCompleta(nomes, herdeiros, pecas)) return false;
+		new JanelaJogo().setVisible(true);
+		return true;
+	}
+
+	public boolean escolherCartaSecreta(int indice) {
+		return model.escolherCartaSecreta(indice);
+	}
+
 	/**
 	 * Chamados pelo PainelTabuleiro (Parte 2), porque todo deslocamento é feito
 	 * clicando no mapa: numa parada (mover o peão), num local do Khan
 	 * (província do Khan ou ModelAPI.AREA_MELHORIAS) ou no outro peão de Altani.
 	 * Um clique recusado não faz nada: o painel não mostra mensagem.
 	 */
+	public boolean moverPor(List<String> rota, List<Boolean> saltos) { return model.moverPor(rota, saltos); }
+
 	public boolean paradaClicada(String parada) {
 		return model.moverPara(parada);
 	}
@@ -91,4 +103,31 @@ public final class Controlador {
 	public boolean terminarTurno() {
 		return model.terminarTurno();
 	}
+
+	/** Ações da aba lateral; legalidade e custos permanecem no Model. */
+	public boolean construirYurt(String parada) { return model.construirYurt(parada); }
+	public boolean pegarTributo(String provincia) { return model.pegarTributo(provincia); }
+	public boolean atacarCidade(String cidade, String tesouro) { return model.atacarCidade(cidade, tesouro); }
+	public boolean pegarTesouroComMoeda(String cidade, String tesouro) { return model.pegarTesouroComMoeda(cidade, tesouro); }
+	public boolean trocarCavaloPorEspada() { return model.trocarCavaloPorEspada(); }
+	public boolean comprarMelhoria(int indice) { return model.comprarMelhoria(indice); }
+	public boolean escolherMelhoriaGratuita(int indice) { return model.escolherMelhoriaGratuita(indice); }
+
+	public boolean entregarTesouros(String parada, Map<String, Integer> oferta) { return model.entregarTesouros(parada, oferta); }
+	public boolean usarBonus(String bonus) { return model.usarBonus(bonus); }
+	public boolean escolherTesouroDoBonus(String tesouro) { return model.escolherTesouroDoBonus(tesouro); }
+
+	public boolean mostrarCartaSecreta() { return model.mostrarCartaSecreta(); }
+	public boolean ocultarCartaSecreta() { return model.ocultarCartaSecreta(); }
+	public boolean selecionarCartela(int jogador) { return model.selecionarCartela(jogador); }
+
+	/** Prioridade da sequência de telas; a View aplica após receber o Observer. */
+	public String getEtapaPartida() {
+		if (model.isPreparacao()) return "PREPARACAO";
+		if (model.isPartidaEncerrada()) return "RESULTADO";
+		if (model.isTesouroDoBonusPendente()) return "ENTREGAS";
+		if (model.isMelhoriaGratuitaPendente()) return "MELHORIAS";
+		return "JOGO";
+	}
+
 }
