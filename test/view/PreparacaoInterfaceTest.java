@@ -39,8 +39,7 @@ public class PreparacaoInterfaceTest {
 		SwingUtilities.invokeAndWait(new Runnable() {
 			@Override public void run() {
 				ModelAPI api = ModelAPI.getInstance();
-				assertTrue(api.novaPartidaCompleta(List.of("Ana <teste>", "Bia"), List.of("JOCHI", "ALTANI"),
-						PreparacaoCompletaTest.cadastro()));
+				assertTrue(PreparacaoCompletaTest.criarSintetica(List.of("Ana <teste>", "Bia"), List.of("JOCHI", "ALTANI")));
 				PainelPreparacao painel = new PainelPreparacao();
 				try {
 					assertTrue(componentes(painel, JRadioButton.class).isEmpty());
@@ -60,6 +59,11 @@ public class PreparacaoInterfaceTest {
 						opcoes.get(1).doClick();
 						assertTrue(botao(painel, "Confirmar carta secreta").isEnabled());
 						botao(painel, "Confirmar carta secreta").doClick();
+						if (api.isEscolhaMelhoriaInicialPendente()) {
+							assertEquals(2, componentes(painel, JRadioButton.class).size());
+							componentes(painel, JRadioButton.class).get(0).doClick();
+							botao(painel, "Confirmar melhoria inicial").doClick();
+						}
 					}
 					assertFalse(api.isPreparacao());
 					assertTrue(componentes(painel, JRadioButton.class).isEmpty());

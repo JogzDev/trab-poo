@@ -52,7 +52,6 @@ public class PartidaCompletaInterfaceTest {
 		PainelPreparacao preparacao = new PainelPreparacao();
 		PainelTurno turno = new PainelTurno();
 		PainelAcoes acoes = new PainelAcoes();
-		PainelObjetivos objetivos = new PainelObjetivos();
 		PainelResultado resultado = new PainelResultado();
 		PainelTabuleiro mapa = new PainelTabuleiro();
 		mapa.setSize(PainelTabuleiro.LARGURA, PainelTabuleiro.ALTURA);
@@ -63,7 +62,7 @@ public class PartidaCompletaInterfaceTest {
 				botao(preparacao, "Confirmar carta").doClick(0);
 			}
 			assertEquals("JOGO", Controlador.getInstance().getEtapaPartida());
-			botao(objetivos, "Revelar minha carta").doClick(0);
+			assertTrue(Controlador.getInstance().mostrarCartaSecreta());
 			assertTrue(api.isCartaSecretaVisivel());
 			for (int limite = 0; limite < 300 && !api.isPartidaEncerrada(); limite++) {
 				botao(turno, "<b>Branca</b>").doClick(0);
@@ -110,7 +109,7 @@ public class PartidaCompletaInterfaceTest {
 			for (javax.swing.JLabel label : componentes(resultado, javax.swing.JLabel.class)) if (label.getText().contains("Vencedor:") || label.getText().contains("Vitória compartilhada")) vencedorVisivel = true;
 			assertTrue(vencedorVisivel);
 		} finally {
-			for (ObservadorIF painel : List.of(preparacao, turno, acoes, objetivos, resultado, mapa)) api.remove(painel);
+			for (ObservadorIF painel : List.of(preparacao, turno, acoes, resultado, mapa)) api.remove(painel);
 		}
 	}
 	@Test public void partidaCompletaDaPreparacaoAoResultado() throws Exception {

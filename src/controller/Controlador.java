@@ -5,6 +5,8 @@ import java.util.Map;
 
 import view.JanelaInicial;
 import view.JanelaJogo;
+import view.JanelaCartas;
+import view.JanelaCartela;
 
 import model.ModelAPI;
 import model.ObservadorIF;
@@ -24,6 +26,9 @@ import model.ObservadorIF;
 public final class Controlador {
 
 	private static Controlador instancia = null;
+
+	private JanelaCartas janelaCartas;
+	private JanelaCartela janelaCartela;
 
 	private final ModelAPI model = ModelAPI.getInstance();
 
@@ -64,12 +69,7 @@ public final class Controlador {
 		return true;
 	}
 
-	/** Mantém a preparação visível até todos confirmarem uma carta secreta. */
-	public boolean novaPartidaCompleta(List<String> nomes, List<String> herdeiros, List<String> pecas) {
-		if (!model.novaPartidaCompleta(nomes, herdeiros, pecas)) return false;
-		new JanelaJogo().setVisible(true);
-		return true;
-	}
+	public boolean escolherMelhoriaInicial(int indice) { return model.escolherMelhoriaInicial(indice); }
 
 	public boolean escolherCartaSecreta(int indice) {
 		return model.escolherCartaSecreta(indice);
@@ -110,6 +110,7 @@ public final class Controlador {
 	public boolean atacarCidade(String cidade, String tesouro) { return model.atacarCidade(cidade, tesouro); }
 	public boolean pegarTesouroComMoeda(String cidade, String tesouro) { return model.pegarTesouroComMoeda(cidade, tesouro); }
 	public boolean trocarCavaloPorEspada() { return model.trocarCavaloPorEspada(); }
+	public boolean comprarMelhoria(int indice, String coluna) { return model.comprarMelhoria(indice, coluna); }
 	public boolean comprarMelhoria(int indice) { return model.comprarMelhoria(indice); }
 	public boolean escolherMelhoriaGratuita(int indice) { return model.escolherMelhoriaGratuita(indice); }
 
@@ -129,5 +130,18 @@ public final class Controlador {
 		if (model.isMelhoriaGratuitaPendente()) return "MELHORIAS";
 		return "JOGO";
 	}
+
+	public boolean abrirJanelaCartas() {
+		if (!model.temPartida() || model.isPreparacao() || model.isPartidaEncerrada()) return false;
+		if (janelaCartas == null || !janelaCartas.isDisplayable()) janelaCartas = new JanelaCartas();
+		boolean abriu = model.abrirJanelaCartas(); janelaCartas.toFront(); return abriu;
+	}
+	public boolean fecharJanelaCartas() { return model.fecharJanelaCartas(); }
+	public boolean abrirJanelaCartela() {
+		if (!model.temPartida() || model.isPreparacao() || model.isPartidaEncerrada()) return false;
+		if (janelaCartela == null || !janelaCartela.isDisplayable()) janelaCartela = new JanelaCartela();
+		boolean abriu = model.abrirJanelaCartela(); janelaCartela.toFront(); return abriu;
+	}
+	public boolean fecharJanelaCartela() { return model.fecharJanelaCartela(); }
 
 }

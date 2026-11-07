@@ -66,7 +66,7 @@ public class EntregasInterfaceTest {
 			}
 		});
 	}
-	@Test public void demonstracaoNaoPermiteEntregasNemUsoDeBonus() throws Exception {
+	@Test public void preparacaoNaoPermiteEntregasNemUsoDeBonus() throws Exception {
 		SwingUtilities.invokeAndWait(new Runnable() {
 			@Override public void run() {
 				ModelAPI api = ModelAPI.getInstance();
@@ -75,7 +75,7 @@ public class EntregasInterfaceTest {
 				try {
 					assertFalse(botao(painel, "Entregar").isEnabled());
 					assertFalse(botao(painel, "Usar bônus").isEnabled());
-					assertEquals(0, combo(painel, "conselheiro").getItemCount());
+					assertEquals(7, combo(painel, "conselheiro").getItemCount());
 					for (JSpinner spinner : componentes(painel, JSpinner.class)) assertFalse(spinner.isEnabled());
 				} finally { api.remove(painel); }
 			}

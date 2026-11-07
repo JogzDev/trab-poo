@@ -29,29 +29,33 @@ public class PainelMelhorias extends JPanel implements ObservadorIF {
 	private final ButtonGroup selecao = new ButtonGroup();
 	private final JButton comprar = new JButton("Comprar por 2 moedas");
 	private final JButton gratuita = new JButton("Escolher grátis para branca");
+	private final JComboBox<String> destino = new JComboBox<>(new String[] { "VERMELHA", "VERDE", "AMARELA", "BRANCA" });
 	private final JComboBox<String> jogadores = new JComboBox<>();
-	private final JPanel cartela = new JPanel();
+	private final JButton abrirCartela = new JButton("Abrir cartela com imagens");
 	private boolean atualizando;
 
 	public PainelMelhorias() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		setBorder(BorderFactory.createEmptyBorder(12, 10, 12, 10));
 		ofertas.setLayout(new BoxLayout(ofertas, BoxLayout.Y_AXIS));
-		cartela.setLayout(new BoxLayout(cartela, BoxLayout.Y_AXIS));
 		adicionar(new JLabel("<html><b>Mercado de melhorias</b></html>"));
 		adicionar(aviso);
 		adicionar(ofertas);
+		destino.setName("colunaCompraJochi");
+		destino.addActionListener(new SelecionarOferta());
+		adicionar(destino);
 		comprar.addActionListener(new Comprar());
 		gratuita.addActionListener(new EscolherGratuita());
 		adicionar(comprar);
 		adicionar(gratuita);
-		adicionar(texto("A peça comprada vai para sua cor; a recompensa vai para a branca. Ambas só produzem efeitos em turnos seguintes."));
+		adicionar(texto("A compra segue a cor da peça; Jochi escolhe a coluna acima. A recompensa vai para a branca. Ambas só produzem efeitos em turnos seguintes."));
 		add(Box.createVerticalStrut(12));
 		adicionar(new JLabel("<html><b>Cartela de melhorias</b></html>"));
 		jogadores.setName("jogadorCartela");
 		jogadores.addActionListener(new SelecionarJogador());
 		adicionar(jogadores);
-		adicionar(cartela);
+		abrirCartela.addActionListener(new AbrirCartela());
+		adicionar(abrirCartela);
 		Controlador.getInstance().registra(this);
 		atualizar();
 	}
@@ -63,7 +67,10 @@ public class PainelMelhorias extends JPanel implements ObservadorIF {
 
 	private class Comprar implements ActionListener {
 		@Override public void actionPerformed(ActionEvent evento) {
-			if (selecao.getSelection() != null) Controlador.getInstance().comprarMelhoria(indice());
+			if (selecao.getSelection() != null) {
+				if (destino.isVisible()) Controlador.getInstance().comprarMelhoria(indice(), (String) destino.getSelectedItem());
+				else Controlador.getInstance().comprarMelhoria(indice());
+			}
 		}
 	}
 	private class EscolherGratuita implements ActionListener {
@@ -108,7 +115,7 @@ public class PainelMelhorias extends JPanel implements ObservadorIF {
 		else if (m.isPartidaCompleta()) ofertas.add(texto("Pilha fechada esgotada."));
 		if (mercado.isEmpty() && m.isPartidaCompleta()) ofertas.add(texto("Mercado vazio."));
 		atualizarBotoes();
-		atualizarCartela();
+		abrirCartela.setEnabled(m.temPartida() && !m.isPreparacao() && !m.isPartidaEncerrada());
 		revalidate();
 		repaint();
 	}
@@ -119,35 +126,28 @@ public class PainelMelhorias extends JPanel implements ObservadorIF {
 		opcao.setAlignmentX(Component.LEFT_ALIGNMENT);
 		opcao.addActionListener(new SelecionarOferta());
 		selecao.add(opcao);
+		if (indice >= 0) {
+			PainelImagem imagem = new PainelImagem(ModelAPI.getInstance().getIdsMercadoMelhorias().get(indice), 190, 90);
+			imagem.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+			imagem.setAlignmentX(Component.LEFT_ALIGNMENT);
+			ofertas.add(imagem);
+		}
 		ofertas.add(opcao);
 		ofertas.add(Box.createVerticalStrut(8));
 	}
 	private int indice() { return Integer.parseInt(selecao.getSelection().getActionCommand()); }
 	private void atualizarBotoes() {
 		ModelAPI m = ModelAPI.getInstance();
+		destino.setVisible(m.temPartida() && m.getHerdeiroJogador(m.getJogadorDaVez()).equals("JOCHI"));
 		boolean selecionada = selecao.getSelection() != null;
-		comprar.setEnabled(selecionada && !m.isMelhoriaGratuitaPendente() && m.podeComprarMelhoria(indice()));
+		comprar.setEnabled(selecionada && !m.isMelhoriaGratuitaPendente() && (destino.isVisible() ? m.podeComprarMelhoria(indice(), (String) destino.getSelectedItem()) : m.podeComprarMelhoria(indice())));
 		gratuita.setVisible(m.isMelhoriaGratuitaPendente());
 		gratuita.setEnabled(selecionada && m.podeEscolherMelhoriaGratuita(indice()));
 	}
-	private void atualizarCartela() {
-		cartela.removeAll();
-		ModelAPI m = ModelAPI.getInstance();
-		int jogador = jogadores.getSelectedIndex();
-		if (jogador < 0 || !m.isPartidaCompleta()) {
-			cartela.add(texto("Melhorias indisponíveis nesta demonstração."));
-		} else for (String coluna : new String[] { "VERMELHA", "VERDE", "AMARELA", "BRANCA" }) {
-			List<String> pecas = m.getMelhoriasJogador(jogador, coluna);
-			JLabel titulo = new JLabel(coluna + " (" + pecas.size() + "/4)");
-			titulo.setBorder(BorderFactory.createMatteBorder(0, 5, 0, 0, CoresJogador.daColuna(coluna)));
-			cartela.add(titulo);
-			if (pecas.isEmpty()) cartela.add(texto("Sem melhorias."));
-			for (String peca : pecas) cartela.add(texto(PainelPreparacao.escapar(peca)));
-			cartela.add(Box.createVerticalStrut(8));
-		}
-		cartela.revalidate();
-		cartela.repaint();
+	private class AbrirCartela implements ActionListener {
+		@Override public void actionPerformed(ActionEvent evento) { Controlador.getInstance().abrirJanelaCartela(); }
 	}
+
 	private static String textoHtml(String conteudo) { return "<html><div style='width:145px'>" + conteudo + "</div></html>"; }
 	private static JLabel texto(String conteudo) { return new JLabel(textoHtml(conteudo)); }
 	private void adicionar(JComponent componente) {

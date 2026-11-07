@@ -16,7 +16,7 @@ public class EncerramentoModelAPITest {
 	@After public void limpar() { api.remove(contador); }
 	/** Sorteio fixo para o teste de partida completa pelos controles gráficos. */
 	public static void prepararPartida() {
-		assertTrue(ModelAPI.getInstance().novaPartidaCompleta(List.of("Ana", "Bia"), List.of("CHAGATAI", "ALTANI"), PreparacaoCompletaTest.cadastro(), new Random(42)));
+		assertTrue(ModelAPI.getInstance().novaPartidaCompleta(List.of("Ana", "Bia"), List.of("CHAGATAI", "ALTANI"), PecasDoJogo.cadastro(), new Random(42)));
 	}
 	@Test public void cartasSecretasESelecaoDeCartelaAtualizamObserver() {
 		prepararPartida();
@@ -73,7 +73,7 @@ public class EncerramentoModelAPITest {
 	}
 	@Test public void rotaEscolheSaltarOuVisitarYurtProprio() {
 		for (boolean saltar : List.of(true, false)) {
-			assertTrue(api.novaPartida(List.of("Ana", "Bia"), List.of("TOLUI", "ALTANI")));
+			assertTrue(PreparacaoCompletaTest.iniciarPadrao(List.of("Ana", "Bia"), List.of("TOLUI", "ALTANI")));
 			assertTrue(api.ativarColuna("VERDE"));
 			assertTrue(api.pegarTributo("Estepe Central")); assertTrue(api.construirYurt("Sarai Sudoeste"));
 			assertTrue(api.terminarTurno()); assertTrue(api.ativarColuna("VERDE")); assertTrue(api.terminarTurno());

@@ -40,7 +40,6 @@ public class PainelAcoes extends JPanel implements ObservadorIF {
 	public PainelAcoes() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		setBorder(BorderFactory.createEmptyBorder(12, 10, 12, 10));
-		setPreferredSize(new Dimension(PainelTurno.LARGURA - 20, 880));
 		paradas.setName("parada");
 		provincias.setName("provincia");
 		cidades.setName("cidade");
@@ -106,6 +105,8 @@ public class PainelAcoes extends JPanel implements ObservadorIF {
 			}
 		}
 	}
+
+	@Override public Dimension getPreferredSize() { return new Dimension(PainelTurno.LARGURA - 20, super.getPreferredSize().height); }
 
 	@Override public void notify(ObservadoIF observado) { atualizar(); }
 
