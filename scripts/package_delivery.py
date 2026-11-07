@@ -5,7 +5,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 root = Path(__file__).resolve().parent.parent
 sources = [".project", ".classpath", ".settings", "src", "test", "imagens", "lib",
-           "config", "docs", "scripts", "README.md", "3a-Iteracao.pdf"]
+           "docs", "scripts", "README.md"]
 missing = [name for name in sources if not (root / name).exists()]
 if missing:
     raise SystemExit("Arquivos ausentes: " + ", ".join(missing))

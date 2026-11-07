@@ -1,94 +1,81 @@
-# Entrega da 3ª iteração
+# Conferência da entrega — 3ª iteração
 
-A implementação dos fluxos está concluída e foi validada com **193 testes**.
-O cadastro oficial das peças permanece pendente por decisão registrada durante
-a implementação. O pacote contém um cadastro sintético identificado para
-experimentar todos os fluxos; ele não deve ser apresentado como oficial.
+## Executar e testar
 
-## Executar
-
-Requer JDK 17 ou superior. No Eclipse, importe a pasta `HerdeirosDeKhan` como
-projeto existente e execute `controller.Main` como aplicação Java.
-
-Pelo terminal, na pasta do projeto:
+Requer JDK 17+. No Eclipse, importe a pasta do projeto e execute
+`controller.Main`. Pelo terminal:
 
 ```bash
 ./scripts/run_game.sh
-```
-
-Caso o Java não esteja no ambiente, configure `JAVA_HOME` para um JDK 17+.
-Para iniciar com os componentes completos, clique **Selecionar cadastro das
-peças…** e abra `config/pecas.demonstracao.txt`. Configure os jogadores e
-confirme. Esse cadastro respeita os totais físicos, mas suas cores e pedidos
-são sintéticos. Para usar dados oficiais, preencha uma cópia de
-`config/pecas.modelo.txt` e selecione o arquivo preenchido.
-
-## Conferência dos requisitos
-
-| Requisito | Implementação e evidência |
-|---|---|
-| Integração View/Model | Preparação, movimento, construção, coleta, ataques, habilidades, melhorias, entregas, bônus, objetivos e resultado acessíveis pelas telas. |
-| Singleton | `ModelAPI.getInstance()` e `Controlador.getInstance()`. |
-| Façade | Views e Controller usam `ModelAPI`; as classes de domínio mantêm visibilidade de pacote. |
-| Observer com interfaces | `ObservadoIF`, `ObservadorIF` e seus implementadores; comandos aceitos notificam os painéis. Cartas e seleção de cartela também passam pela notificação. |
-| Controller organiza a sequência | Abre a partida, recebe os comandos e define prioridade da preparação, escolhas pendentes, jogo e resultado com `getEtapaPartida()`. |
-| Restrições herdadas da 2ª iteração | Listeners nomeados, sem lambdas na View; deslocamentos por clique no mapa; imagem com `drawImage`; janela limitada a 1400 × 1050; recusas sem diálogo. |
-| Salvamento e recuperação | Reservados à última iteração; não incluídos. |
-
-## Roteiro de revisão gráfica
-
-1. Configure de 2 a 5 jogadores. Passe a tela para cada um revelar e escolher
-   sua carta secreta. Os turnos só são liberados após a última escolha.
-2. Na aba **Turno**, ative uma coluna. Mova o peão e o Khan no mapa. Com
-   Altani, escolha o peão antes de sua primeira ação de posição.
-3. Na aba **Ações**, colete tributos, construa yurts e ataque cidades. Confira
-   custos, tesouros, estoque, desenhos dos yurts e habilidades especiais.
-4. Na aba **Melhorias**, escolha uma peça do mercado ou compre às cegas da
-   pilha. Consulte as cartelas e resolva a recompensa para a branca ao
-   completar uma linha. Reponha o mercado movendo o Khan no mapa.
-5. Na aba **Entregas**, confira o pedido e a visita, escolha quantidades e
-   entregue. Ative um bônus obtido. Se ele sortear tesouros, confirme uma das
-   opções antes de terminar o turno.
-6. Na aba **Objetivos**, confira as cartas abertas e seu progresso. Revele
-   sua carta secreta e confira que ela fica oculta ao terminar o turno.
-7. Acima do mapa, marque **Traçar rota no mapa**, clique em paradas consecutivas
-   e clique novamente na última para executar. A opção de salto é registrada
-   para cada parada acrescentada; o destino sempre é visitado.
-8. Acompanhe Kurultai e a rodada final. No encerramento, a aba **Resultado**
-   abre automaticamente com os vencedores, votos e critérios de desempate.
-
-## Validação automatizada
-
-```bash
 ./scripts/run_tests.sh
-```
-
-A suíte tem 193 testes. Além dos cenários das iterações anteriores, verifica
-os contratos da fachada, custos e recusas sem alterações, recompensas,
-privacidade das cartas e cliques reais em componentes Swing na EDT.
-
-`PartidaCompletaInterfaceTest` percorre uma partida da preparação até o
-encerramento pelas conquistas, usando botões e eventos de mouse no mapa.
-Não injeta votos, recursos ou posições no domínio. Os testes anteriores
-cobrem o gatilho do Kurultai, rodada final, influência e desempates. O caso
-de rota passa por uma parada ocupada e executa pelo clique no destino.
-
-As prévias gráficas foram renderizadas e inspecionadas, incluindo objetivos,
-carta secreta, escolhas obrigatórias, rota e resultado. A janela de jogo
-foi conferida dentro do limite de 1400 × 1050.
-
-## Gerar o ZIP
-
-```bash
 python3 scripts/package_delivery.py
 ```
 
-Saída: `output/entrega/HerdeirosDeKhan-iteracao3.zip`, contendo uma pasta raiz
-`HerdeirosDeKhan` com `.project`, `.classpath`, `.settings`, `src`, `test`,
-`lib`, `imagens`, `config`, `docs`, `scripts`, `README.md` e o enunciado.
-A integridade do ZIP é conferida pelo script. O pacote não inclui `.git`,
-builds nem dados temporários.
+Os scripts respeitam `JAVA_HOME`. A tela inicial já prepara a partida completa
+com o cadastro embutido; basta escolher jogadores e herdeiros.
 
-Antes de apresentar o pacote como versão fiel ao material físico, substituir
-ou complementar o cadastro sintético pelo cadastro oficial conferido. A
-configuração oficial foi deixada pendente; ela não é gerada pelo programa.
+## Correções solicitadas no PR #8
+
+| Item | Resultado |
+|---|---|
+| Cartas em janela própria | `JanelaCartas`, aberta/fechada por botões e Observer; fotos oficiais via Java2D. |
+| Cartela com melhorias | `JanelaCartela`, imagem do herdeiro e sobreposição das peças nas colunas com `drawImage()`. |
+| Identificadores no Model | IDs estáveis de cartas e melhorias; `HashMap` de imagens exclusivamente na View. |
+| Partida completa padrão | Cadastro embutido em `PecasDoJogo`; sem modo reduzido ou seletor de arquivo. |
+| Pedidos e cores | Corrigidos conforme tabuleiro e imagens do EAD. Multiplicidades por cor documentadas como hipótese. |
+| Jochi | Escolhe uma entre duas melhorias iniciais e escolhe a coluna das compras; capacidade, moedas e recompensas verificadas. |
+| PDFs locais | Material original em `.context/`, ignorado e fora do ZIP. |
+| Autoria dos próximos commits | E-mail local configurado com o endereço público da conta GitHub. |
+
+## Roteiro gráfico
+
+1. Inicie uma partida de dois a cinco jogadores. Cada jogador revela e escolhe
+   uma carta secreta, vendo as duas imagens oficiais. Com Jochi, confira a
+   escolha de uma entre duas melhorias para a branca.
+2. Em **Turno**, ative uma coluna e mova peão e Khan por clique. Com Altani,
+   troque o peão antes de sua primeira ação de posição.
+3. Em **Ações**, colete tributos, construa yurts, ataque cidades escolhendo os
+   tesouros e teste Ogedei/Chagatai. Confira os saldos e os yurts desenhados.
+4. Clique **Ver cartas**. Revele e oculte sua carta; confira as quatro cartas
+   abertas. Feche pelo botão e pelo controle da janela. Ao trocar de turno,
+   a carta secreta deve ficar oculta.
+5. Clique **Ver cartela**. Confira a foto do herdeiro, a seleção de outro
+   jogador e os espaços de melhoria. Com a janela aberta, compre uma peça na
+   aba **Melhorias** e confira a atualização automática da sobreposição.
+6. Com Jochi, compre para uma coluna de outra cor e tente uma coluna cheia.
+   A compra recusada deve preservar moedas e peças. A compra cega também usa
+   o destino escolhido e não revela antecipadamente a peça.
+7. Complete uma linha e resolva a recompensa para a branca. Reponha o mercado
+   movendo o Khan para a área de melhorias no mapa.
+8. Em **Entregas**, escolha quantidades, realize uma entrega numa parada
+   visitada e use o bônus. Resolva a escolha de tesouro antes de encerrar o turno.
+9. Use **Traçar rota no mapa** para passar por paradas ocupadas e escolher
+   saltar ou visitar um yurt próprio. Clique novamente no destino para executar.
+10. Acompanhe votos, Kurultai e rodada final. Confira o resultado e os desempates.
+
+## Evidências
+
+- 205 testes automatizados, incluindo os dados, as 49 imagens mapeadas, Jochi,
+  Observer e os fluxos Swing na EDT.
+- Partida completa da preparação ao resultado por botões e eventos de mouse,
+  com o cadastro de produção e sem injetar votos, posições ou recursos.
+- Inspeção visual das janelas de cartas e cartela, da preparação e das
+  sobreposições; limites de 1400 × 1050 conferidos.
+- Teste de fechamento pelo botão e pelo evento de janela; privacidade da carta
+  verificada na troca de turno.
+
+## Dados assumidos
+
+A distribuição de 15 melhorias amarelas, 15 vermelhas e 14 verdes segue a
+proposta da revisão e respeita todos os totais por símbolo. As cores e pedidos
+foram conferidos; a quantidade física de cada combinação não foi comprovada.
+A peça inicial rejeitada por Jochi volta ao fundo da pilha: o texto da cartela
+não especifica o destino dessa peça. Detalhes em `docs/iteracao3.md`.
+
+## ZIP
+
+`python3 scripts/package_delivery.py` gera
+`output/entrega/HerdeirosDeKhan-iteracao3.zip`, com raiz `HerdeirosDeKhan`.
+Inclui `.project`, `.classpath`, `.settings`, fontes, testes, imagens,
+bibliotecas, scripts e documentação. O script confere a integridade do arquivo.
+PDFs, ZIPs originais, `.context`, `.git` e builds ficam fora do pacote.

@@ -1,24 +1,12 @@
 # Herdeiros de Khan: Trabalho de INF1636 (POO)
 
-Projeto Eclipse em Java do jogo **Herdeiros de Khan**, organizado em MVC.
-Estado atual: **implementação da 3ª iteração concluída**, com preparação,
-movimentos, ações, melhorias, entregas, bônus, objetivos e resultado final
-integrados pela interface. **O cadastro oficial das peças permanece pendente**;
-há um cadastro sintético identificado para demonstrar os fluxos completos.
-A **2ª iteração** (11/10 → 25/10/2026) implementou a tela gráfica em que os
-jogadores ativam colunas da cartela e movem os peões e o Khan pelo mapa. A
-1ª iteração (28/09 → 11/10/2026) entregou o componente **Model** com os testes
-unitários em JUnit 4.
+Projeto Eclipse em Java 17, organizado em MVC. A 3ª iteração integra a partida
+completa pela interface e incorpora as correções da revisão do PR #8.
 
-> Importante: o jogo do trabalho é **Herdeiros de Khan** (manual em
-> `Regas.pdf`), não War. O documento da 1ª iteração usa War apenas como
-> exemplo de como o Controller consulta o Model. A divisão de tarefas inicial
-> do grupo foi escrita com termos de War; a tabela de correspondência está
-> mais abaixo.
+## Executar
 
-## Como executar e preparar a entrega
-
-Requer JDK 17 ou superior. Pelo terminal:
+No Eclipse, importe o projeto existente e execute `controller.Main`.
+Pelo terminal, com JDK 17 ou superior:
 
 ```bash
 ./scripts/run_game.sh
@@ -26,60 +14,53 @@ Requer JDK 17 ou superior. Pelo terminal:
 python3 scripts/package_delivery.py
 ```
 
-Os scripts Java respeitam `JAVA_HOME`. No Eclipse, importe o projeto existente
-e execute `controller.Main`. Para demonstrar todos os recursos, selecione
-`config/pecas.demonstracao.txt` na tela inicial. Esse arquivo é **sintético,
-não oficial**. O ZIP gerado fica em `output/entrega/HerdeirosDeKhan-iteracao3.zip`.
+Os scripts Java respeitam `JAVA_HOME`. A tela inicial pede os jogadores e os
+herdeiros e prepara automaticamente o jogo completo com `model.PecasDoJogo`.
+Cada jogador escolhe sua carta secreta. Jochi também escolhe uma entre duas
+melhorias para a branca antes de iniciar os turnos.
 
-Confira o roteiro e a pendência dos dados em
-[`docs/entrega-iteracao3.md`](docs/entrega-iteracao3.md).
+## Interface da 3ª iteração
 
-## 3ª iteração: fluxos integrados
+- **Turno:** ativar colunas, acompanhar Kurultai e terminar o turno. Os botões
+  **Ver cartas** e **Ver cartela** abrem as janelas próprias.
+- **Ações:** coletar tributos, construir yurts, atacar cidades escolhendo
+  tesouros e usar as habilidades de Ogedei e Chagatai.
+- **Melhorias:** comprar no mercado ou às cegas da pilha e resolver recompensas
+  para a branca. Jochi escolhe a coluna da compra, respeitando os quatro espaços.
+- **Entregas:** selecionar tesouros, entregar aos conselheiros e usar os bônus.
+  Escolhas obrigatórias são apresentadas antes de permitir encerrar o turno.
+- **Cartas e Resultado:** consultar objetivos na janela de cartas e apresentar a pontuação final,
+  influência, cartas secretas e critérios de desempate.
 
-Na tela inicial, **Selecionar cadastro das peças…** permite carregar as peças
-físicas em UTF-8 e marca a opção **Preparar com cartas, tesouros e melhorias**.
-Ao iniciar, cada jogador revela duas cartas secretas e confirma uma. O jogo
-libera os turnos depois da última escolha; as telas mudam pelo Observer.
+As janelas de cartas e cartela desenham as imagens oficiais do EAD com
+`Graphics2D.drawImage()`. A cartela mostra a imagem do herdeiro e as melhorias
+sobre cada coluna. Os identificadores do Model são ligados às fotos por um
+`HashMap` da View. Abertura, fechamento, seleção de cartela, compras e troca de
+turno atualizam as janelas pelo Observer. A carta secreta volta a ficar oculta
+na troca de turno e ao fechar sua janela.
 
-O cadastro oficial ainda precisa ser preenchido. O arquivo
-[`config/pecas.modelo.txt`](config/pecas.modelo.txt) contém as instruções e é
-recusado enquanto incompleto. Para testar a interface completa, use
-`config/pecas.demonstracao.txt`, identificado como sintético. Sem marcar a opção,
-a tela inicia o modo reduzido, sem os componentes de cartas e melhorias.
+Peões e Khan se movem por clique no mapa. A opção **Traçar rota no mapa**
+permite definir cada parada, escolher saltar ou visitar yurts próprios e
+executar clicando novamente no destino.
 
-Na janela da partida, a aba **Ações** permite construir yurts, coletar
-tributos, atacar cidades e escolher tesouros, além de usar as habilidades de
-Ogedei e Chagatai. Os recursos e as opções permitidas se atualizam pelo
-Observer. Os yurts construídos e de conquista aparecem no mapa. Movimentos
-continuam sendo feitos no tabuleiro; colunas e fim do turno ficam na aba
-**Turno**.
+## Dados e entrega
 
-A aba **Melhorias** mostra o mercado e as cartelas dos jogadores. Permite
-comprar por duas moedas ou às cegas da pilha fechada, e escolher a melhoria
-gratuita para a branca ao completar uma linha. Essa escolha abre a aba
-automaticamente e precisa ser resolvida antes de terminar o turno. As peças
-adquiridas só produzem efeitos em turnos seguintes. A reposição continua no
-movimento do Khan para a área de melhorias.
+Os pedidos dos conselheiros e as combinações de cor e símbolo das melhorias
+foram conferidos na revisão contra as imagens oficiais. As **quantidades por
+cor são uma hipótese documentada**: 15 amarelas, 15 vermelhas e 14 verdes,
+respeitando os 44 componentes e os totais por símbolo. Essa multiplicidade
+não é comprovada pelas fotos dos tipos de peça.
 
-Na aba **Entregas**, consulte os pedidos dos conselheiros, selecione as
-quantidades de tesouros e realize entregas nas paradas visitadas neste turno.
-A tela mostra os saldos físicos e virtuais e os bônus obtidos, permitindo
-ativá-los uma única vez. O bônus de tesouro abre a escolha obrigatória de
-uma das peças sorteadas; confirme-a antes de terminar o turno.
+A suíte atual tem **205 testes**, incluindo Jochi, dados, imagens reais,
+Observer, escolhas e uma partida completa pelos controles Swing. O pacote
+fica em `output/entrega/HerdeirosDeKhan-iteracao3.zip`.
 
-A aba **Objetivos** mostra os objetivos abertos e seu progresso. A carta
-secreta só aparece após confirmação do jogador da vez e fica oculta na troca
-de turno. Votos, Kurultai e rodada final são atualizados pelo Observer. No
-encerramento, a aba **Resultado** abre automaticamente, mostrando vencedor,
-composição dos votos e critérios de desempate, inclusive vitória compartilhada.
+Roteiro de conferência: [docs/entrega-iteracao3.md](docs/entrega-iteracao3.md).
+Detalhes da integração: [docs/iteracao3.md](docs/iteracao3.md).
 
-Acima do mapa, **Traçar rota no mapa** permite escolher cada parada e decidir
-se um yurt próprio intermediário será saltado ou visitado. Clique novamente na
-última parada para executar; o movimento continua sendo acionado pelo mapa.
-Sem esse modo, o clique usa o caminho mais barato.
-
-Contrato, formato do cadastro e próximos marcos em
-[`docs/iteracao3.md`](docs/iteracao3.md).
+Os PDFs e ZIPs originais do EAD ficam na pasta local `.context/`, ignorada
+pelo Git. As imagens utilizadas pela aplicação estão em `imagens/oficiais/`
+e fazem parte do pacote. Salvamento e recuperação ficam para a última iteração.
 
 ## 2ª iteração: tela gráfica
 
@@ -177,7 +158,7 @@ imagem está em `view.CoordenadasMapa`.
 
 Compila `src/` e `test/` com `javac` e roda `org.junit.runner.JUnitCore`.
 A base da 2ª iteração tem **159 testes** (29 da parte 1, 46 da parte 2,
-71 da parte 3 e 13 da fachada `ModelAPI`). A suíte atual tem **193 testes passando**, incluindo
+71 da parte 3 e 13 da fachada `ModelAPI`). A suíte atual tem **205 testes passando**, incluindo
 preparação completa, ações pela fachada, mercado, recompensas, entregas, bônus
 objetivos, rotas e uma partida completa pelos controles Swing.
 O script respeita `JAVA_HOME`; use um JDK 17 ou superior, como o incluído no Eclipse.
@@ -227,6 +208,6 @@ Consulte [docs/parte3-integracao.md](docs/parte3-integracao.md) para os contrato
 - `ComponentesKhan`: integra a preparação, as ações e as escolhas pendentes à `Partida`.
 - `Pontuacao`: influência por maioria regional, cartas secretas e desempates por tesouros não entregues e distância da capital.
 
-O catálogo de cores das 44 melhorias não foi inventado a partir do PDF monocromático: a lista de peças e os pedidos/bônus dos conselheiros entram como configuração. Veja os dados pendentes, as interpretações de casos ambíguos e exemplos de uso em [docs/parte2-integracao.md](docs/parte2-integracao.md). Os testes novos estão documentados em [docs/testes-parte2.md](docs/testes-parte2.md).
+A 3ª iteração usa o cadastro embutido em `PecasDoJogo`, com cores e pedidos conferidos nas imagens e multiplicidades documentadas como hipótese. Veja os dados pendentes, as interpretações de casos ambíguos e exemplos de uso em [docs/parte2-integracao.md](docs/parte2-integracao.md). Os testes novos estão documentados em [docs/testes-parte2.md](docs/testes-parte2.md).
 
-No Eclipse, atualize o projeto com **F5** e execute `test/model/TodosOsTestes.java` em **Run As > JUnit Test**. No terminal, use `JAVA_HOME="/caminho/do/jdk" ./scripts/run_tests.sh`. Validação desta revisão: **159 testes, zero falhas**, compilados com `--release 17` com o JDK 17 e com o JDK 25.
+No Eclipse, atualize o projeto com **F5** e execute `test/model/TodosOsTestes.java` em **Run As > JUnit Test**. No terminal, use `JAVA_HOME="/caminho/do/jdk" ./scripts/run_tests.sh`. Validação histórica da 2ª iteração: 159 testes. A suíte revisada da 3ª iteração tem **205 testes**, com compatibilidade Java 17.
