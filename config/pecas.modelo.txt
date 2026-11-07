@@ -1,0 +1,26 @@
+# MODELO INCOMPLETO: preencher a partir do material oficial antes de usar.
+# Codificação UTF-8. Linhas vazias e comentários são ignorados.
+#
+# Uma linha por combinação de cor e símbolo de melhoria:
+# MELHORIA;COR;SIMBOLO;QUANTIDADE
+# Cores: VERMELHA, VERDE, AMARELA. BRANCA não é cor de peça física.
+# Símbolos: MOEDA, ESPADA, YURT, MAO, CAVALOS,
+# FERRO, PELES, GADO, TECIDO, ESPECIARIAS.
+# Totais entre todas as cores: 8 moedas, 8 espadas, 8 yurts,
+# 6 mãos, 9 cavalos e 1 de cada tesouro (44 peças).
+#
+# Uma linha por parada de conselheiro (sete, incluindo Karakorum):
+# CONSELHEIRO;NOME DA PARADA;PEDIDO
+# Pedido de dupla: TIPO:2 ou QUAISQUER (três tesouros quaisquer).
+# Pedido de Karakorum: três tipos distintos separados por vírgulas,
+# com quantidade 1 para cada tipo, conforme a face oficial escolhida.
+# Os sete bônus são embaralhados automaticamente, um para cada parada.
+#
+# Paradas a cadastrar:
+# Conselheiro Norte
+# Conselheiro Nordeste
+# Conselheiro Oeste
+# Conselheiro Leste
+# Conselheiro Sudoeste
+# Conselheiro Sul
+# Karakorum

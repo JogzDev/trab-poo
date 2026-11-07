@@ -6,6 +6,9 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +17,8 @@ import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -37,6 +42,9 @@ public class JanelaInicial extends JFrame {
 	private final JTextField[] tfNomes = new JTextField[MAX_JOGADORES];
 	private final JComboBox<String>[] cbHerdeiros = novosCombos();
 	private final JPanel[] paineisLinha = new JPanel[MAX_JOGADORES];
+	private final JCheckBox cbCompleta = new JCheckBox("Preparar com cartas, tesouros e melhorias");
+	private final JLabel lbPecas = new JLabel("Modo reduzido: sem cartas e melhorias. Cadastro oficial pendente.");
+	private List<String> pecas;
 	private final JLabel lbAviso = new JLabel(" ");
 
 	/** Mostra só as linhas dos jogadores escolhidos. */
@@ -52,6 +60,23 @@ public class JanelaInicial extends JFrame {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			iniciar();
+		}
+	}
+
+	private class AcaoCarregarPecas implements ActionListener {
+		@Override public void actionPerformed(ActionEvent e) {
+			JFileChooser seletor = new JFileChooser();
+			seletor.setDialogTitle("Selecionar cadastro das peças");
+			if (seletor.showOpenDialog(JanelaInicial.this) != JFileChooser.APPROVE_OPTION) return;
+			try {
+				List<String> novas = Files.readAllLines(seletor.getSelectedFile().toPath(), StandardCharsets.UTF_8);
+				pecas = novas;
+				cbCompleta.setSelected(true);
+				lbPecas.setText("<html>Cadastro: " + PainelPreparacao.escapar(seletor.getSelectedFile().getName()) + "</html>");
+				lbAviso.setText(" ");
+			} catch (IOException ex) {
+				lbAviso.setText("Não foi possível ler o cadastro das peças.");
+			}
 		}
 	}
 
@@ -88,7 +113,17 @@ public class JanelaInicial extends JFrame {
 			linhas.add(linha);
 			paineisLinha[i] = linha;
 		}
-		add(linhas, BorderLayout.CENTER);
+		JPanel centro = new JPanel(new BorderLayout(8, 8));
+		centro.add(linhas, BorderLayout.CENTER);
+		JPanel configuracao = new JPanel(new GridLayout(3, 1, 4, 4));
+		configuracao.setBorder(BorderFactory.createEmptyBorder(0, 12, 8, 12));
+		configuracao.add(cbCompleta);
+		JButton carregar = new JButton("Selecionar cadastro das peças…");
+		carregar.addActionListener(new AcaoCarregarPecas());
+		configuracao.add(carregar);
+		configuracao.add(lbPecas);
+		centro.add(configuracao, BorderLayout.SOUTH);
+		add(centro, BorderLayout.CENTER);
 
 		JPanel base = new JPanel(new BorderLayout(4, 4));
 		base.setBorder(BorderFactory.createEmptyBorder(4, 12, 12, 12));
@@ -136,10 +171,18 @@ public class JanelaInicial extends JFrame {
 			nomes.add(nome);
 			escolhidos.add(herdeiro);
 		}
-		if (Controlador.getInstance().novaPartida(nomes, escolhidos)) {
+		if (cbCompleta.isSelected() && pecas == null) {
+			lbAviso.setText("Selecione o cadastro das peças antes de preparar a partida.");
+			return;
+		}
+		boolean criada = cbCompleta.isSelected()
+				? Controlador.getInstance().novaPartidaCompleta(nomes, escolhidos, pecas)
+				: Controlador.getInstance().novaPartida(nomes, escolhidos);
+		if (criada) {
 			dispose();
 		} else {
-			lbAviso.setText("Não foi possível iniciar a partida com essa configuração.");
+			String erro = cbCompleta.isSelected() ? ModelAPI.getInstance().getErroConfiguracao() : "Configuração inválida.";
+			lbAviso.setText("<html><div style='width:360px'>" + PainelPreparacao.escapar(erro) + "</div></html>");
 		}
 	}
 }

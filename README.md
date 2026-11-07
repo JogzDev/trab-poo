@@ -1,7 +1,11 @@
 # Herdeiros de Khan: Trabalho de INF1636 (POO)
 
 Projeto Eclipse em Java do jogo **Herdeiros de Khan**, organizado em MVC.
-Estado atual: **2ª iteração** (11/10 → 25/10/2026), com a tela gráfica em que os
+Estado atual: **implementação da 3ª iteração concluída**, com preparação,
+movimentos, ações, melhorias, entregas, bônus, objetivos e resultado final
+integrados pela interface. **O cadastro oficial das peças permanece pendente**;
+há um cadastro sintético identificado para demonstrar os fluxos completos.
+A **2ª iteração** (11/10 → 25/10/2026) implementou a tela gráfica em que os
 jogadores ativam colunas da cartela e movem os peões e o Khan pelo mapa. A
 1ª iteração (28/09 → 11/10/2026) entregou o componente **Model** com os testes
 unitários em JUnit 4.
@@ -11,6 +15,71 @@ unitários em JUnit 4.
 > exemplo de como o Controller consulta o Model. A divisão de tarefas inicial
 > do grupo foi escrita com termos de War; a tabela de correspondência está
 > mais abaixo.
+
+## Como executar e preparar a entrega
+
+Requer JDK 17 ou superior. Pelo terminal:
+
+```bash
+./scripts/run_game.sh
+./scripts/run_tests.sh
+python3 scripts/package_delivery.py
+```
+
+Os scripts Java respeitam `JAVA_HOME`. No Eclipse, importe o projeto existente
+e execute `controller.Main`. Para demonstrar todos os recursos, selecione
+`config/pecas.demonstracao.txt` na tela inicial. Esse arquivo é **sintético,
+não oficial**. O ZIP gerado fica em `output/entrega/HerdeirosDeKhan-iteracao3.zip`.
+
+Confira o roteiro e a pendência dos dados em
+[`docs/entrega-iteracao3.md`](docs/entrega-iteracao3.md).
+
+## 3ª iteração: fluxos integrados
+
+Na tela inicial, **Selecionar cadastro das peças…** permite carregar as peças
+físicas em UTF-8 e marca a opção **Preparar com cartas, tesouros e melhorias**.
+Ao iniciar, cada jogador revela duas cartas secretas e confirma uma. O jogo
+libera os turnos depois da última escolha; as telas mudam pelo Observer.
+
+O cadastro oficial ainda precisa ser preenchido. O arquivo
+[`config/pecas.modelo.txt`](config/pecas.modelo.txt) contém as instruções e é
+recusado enquanto incompleto. Para testar a interface completa, use
+`config/pecas.demonstracao.txt`, identificado como sintético. Sem marcar a opção,
+a tela inicia o modo reduzido, sem os componentes de cartas e melhorias.
+
+Na janela da partida, a aba **Ações** permite construir yurts, coletar
+tributos, atacar cidades e escolher tesouros, além de usar as habilidades de
+Ogedei e Chagatai. Os recursos e as opções permitidas se atualizam pelo
+Observer. Os yurts construídos e de conquista aparecem no mapa. Movimentos
+continuam sendo feitos no tabuleiro; colunas e fim do turno ficam na aba
+**Turno**.
+
+A aba **Melhorias** mostra o mercado e as cartelas dos jogadores. Permite
+comprar por duas moedas ou às cegas da pilha fechada, e escolher a melhoria
+gratuita para a branca ao completar uma linha. Essa escolha abre a aba
+automaticamente e precisa ser resolvida antes de terminar o turno. As peças
+adquiridas só produzem efeitos em turnos seguintes. A reposição continua no
+movimento do Khan para a área de melhorias.
+
+Na aba **Entregas**, consulte os pedidos dos conselheiros, selecione as
+quantidades de tesouros e realize entregas nas paradas visitadas neste turno.
+A tela mostra os saldos físicos e virtuais e os bônus obtidos, permitindo
+ativá-los uma única vez. O bônus de tesouro abre a escolha obrigatória de
+uma das peças sorteadas; confirme-a antes de terminar o turno.
+
+A aba **Objetivos** mostra os objetivos abertos e seu progresso. A carta
+secreta só aparece após confirmação do jogador da vez e fica oculta na troca
+de turno. Votos, Kurultai e rodada final são atualizados pelo Observer. No
+encerramento, a aba **Resultado** abre automaticamente, mostrando vencedor,
+composição dos votos e critérios de desempate, inclusive vitória compartilhada.
+
+Acima do mapa, **Traçar rota no mapa** permite escolher cada parada e decidir
+se um yurt próprio intermediário será saltado ou visitado. Clique novamente na
+última parada para executar; o movimento continua sendo acionado pelo mapa.
+Sem esse modo, o clique usa o caminho mais barato.
+
+Contrato, formato do cadastro e próximos marcos em
+[`docs/iteracao3.md`](docs/iteracao3.md).
 
 ## 2ª iteração: tela gráfica
 
@@ -107,8 +176,10 @@ imagem está em `view.CoordenadasMapa`.
 ```
 
 Compila `src/` e `test/` com `javac` e roda `org.junit.runner.JUnitCore`.
-Resultado atual: **159 testes, todos passando** (29 da parte 1, 46 da parte 2,
-71 da parte 3 e 13 da fachada `ModelAPI`, da 2ª iteração).
+A base da 2ª iteração tem **159 testes** (29 da parte 1, 46 da parte 2,
+71 da parte 3 e 13 da fachada `ModelAPI`). A suíte atual tem **193 testes passando**, incluindo
+preparação completa, ações pela fachada, mercado, recompensas, entregas, bônus
+objetivos, rotas e uma partida completa pelos controles Swing.
 O script respeita `JAVA_HOME`; use um JDK 17 ou superior, como o incluído no Eclipse.
 
 ## Testes (JUnit 4)
