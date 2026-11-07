@@ -8,6 +8,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JScrollPane;
+import javax.swing.Scrollable;
+import java.awt.Rectangle;
 
 import controller.Controlador;
 import model.ModelAPI;
@@ -36,14 +38,14 @@ public class JanelaJogo extends JFrame implements ObservadorIF {
 		areaMapa.add(new PainelRota(mapa), BorderLayout.NORTH);
 		areaMapa.add(mapa, BorderLayout.CENTER);
 		jogo.add(areaMapa, BorderLayout.CENTER);
-		lateral.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+		lateral.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
+		lateral.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI());
 		lateral.setPreferredSize(new Dimension(PainelTurno.LARGURA + 12, PainelTabuleiro.ALTURA));
-		lateral.addTab("Turno", new JScrollPane(new PainelTurno()));
-		lateral.addTab("Ações", new JScrollPane(new PainelAcoes()));
-		lateral.addTab("Melhorias", new JScrollPane(new PainelMelhorias()));
-		lateral.addTab("Entregas", new JScrollPane(new PainelEntregas()));
-		lateral.addTab("Objetivos", new JScrollPane(new PainelObjetivos()));
-		lateral.addTab("Resultado", new JScrollPane(new PainelResultado()));
+		lateral.addTab("Turno", rolagem(new PainelTurno()));
+		lateral.addTab("Ações", rolagem(new PainelAcoes()));
+		lateral.addTab("Melhorias", rolagem(new PainelMelhorias()));
+		lateral.addTab("Entregas", rolagem(new PainelEntregas()));
+		lateral.addTab("Resultado", rolagem(new PainelResultado()));
 		jogo.add(lateral, BorderLayout.LINE_END);
 		conteudo.add(new PainelPreparacao(), "PREPARACAO");
 		conteudo.add(jogo, "JOGO");
@@ -58,10 +60,25 @@ public class JanelaJogo extends JFrame implements ObservadorIF {
 		setLocationRelativeTo(null);
 	}
 
+	private static JScrollPane rolagem(JPanel painel) {
+		JScrollPane rolagem = new JScrollPane(new ConteudoVertical(painel));
+		rolagem.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		return rolagem;
+	}
+	/** Mantém os controles na largura da barra lateral, sem rolagem horizontal. */
+	private static final class ConteudoVertical extends JPanel implements Scrollable {
+		ConteudoVertical(JPanel painel) { super(new BorderLayout()); add(painel, BorderLayout.NORTH); }
+		@Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+		@Override public int getScrollableUnitIncrement(Rectangle area, int orientacao, int direcao) { return 16; }
+		@Override public int getScrollableBlockIncrement(Rectangle area, int orientacao, int direcao) { return Math.max(16, area.height - 16); }
+		@Override public boolean getScrollableTracksViewportWidth() { return true; }
+		@Override public boolean getScrollableTracksViewportHeight() { return false; }
+	}
+
 	@Override public void notify(ObservadoIF observado) {
 		String etapa = Controlador.getInstance().getEtapaPartida();
 		telas.show(conteudo, etapa.equals("PREPARACAO") ? "PREPARACAO" : "JOGO");
-		if (etapa.equals("RESULTADO")) lateral.setSelectedIndex(5);
+		if (etapa.equals("RESULTADO")) lateral.setSelectedIndex(4);
 		else if (etapa.equals("ENTREGAS")) lateral.setSelectedIndex(3);
 		else if (etapa.equals("MELHORIAS")) lateral.setSelectedIndex(2);
 	}

@@ -77,18 +77,13 @@ public class MelhoriasModelAPITest {
 		assertEquals(1, contador.chamadas);
 	}
 
-	@Test public void preparacaoEDemonstracaoNaoPermitemComprarOuPegarGratis() {
-		assertTrue(api.novaPartidaCompleta(List.of("Ana", "Bia"), List.of("JOCHI", "ALTANI"), PreparacaoCompletaTest.cadastro(), new java.util.Random(42)));
-		assertEquals(1, api.getMelhoriasJogador(0, "BRANCA").size());
+	@Test public void preparacaoNaoPermiteComprarOuPegarGratis() {
+		assertTrue(api.novaPartida(List.of("Ana", "Bia"), List.of("JOCHI", "ALTANI")));
+		assertEquals(0, api.getMelhoriasJogador(0, "BRANCA").size());
 		assertFalse(api.podeComprarMelhoria(0));
 		assertFalse(api.comprarMelhoria(-1));
 		assertFalse(api.escolherMelhoriaGratuita(0));
-		assertTrue(api.novaPartida(List.of("Ana", "Bia"), List.of("JOCHI", "ALTANI")));
-		assertTrue(api.getMercadoMelhorias().isEmpty());
-		assertEquals(0, api.getMelhoriasNaReserva());
-		assertTrue(api.getMelhoriasJogador(0, "BRANCA").isEmpty());
-		assertFalse(api.comprarMelhoria(0));
-		assertFalse(api.isMelhoriaGratuitaPendente());
+		assertEquals(5, api.getMercadoMelhorias().size());
 	}
 
 	/** Completa uma linha com compras reais e resolve a recompensa sem cobrar moedas. */

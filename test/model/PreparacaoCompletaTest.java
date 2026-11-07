@@ -22,6 +22,23 @@ public class PreparacaoCompletaTest {
 
 	@After public void limpar() { api.remove(observador); }
 
+	/** Ajuda apenas os testes de turnos a completar as escolhas iniciais pelo contrato público. */
+	public static boolean iniciarPadrao(List<String> nomes, List<String> herdeiros) {
+		if (!ModelAPI.getInstance().novaPartida(nomes, herdeiros)) return false;
+		concluirPreparacao();
+		return true;
+	}
+	public static boolean criarSintetica(List<String> nomes, List<String> herdeiros) {
+		return ModelAPI.getInstance().novaPartidaCompleta(nomes, herdeiros, cadastro());
+	}
+	public static void concluirPreparacao() {
+		ModelAPI api = ModelAPI.getInstance();
+		while (api.isPreparacao()) {
+			if (api.isEscolhaMelhoriaInicialPendente()) assertTrue(api.escolherMelhoriaInicial(0));
+			else assertTrue(api.escolherCartaSecreta(0));
+		}
+	}
+
 	/** Peças para testes de integração; não representa a distribuição oficial de cores. */
 	public static List<String> cadastro() {
 		List<String> linhas = new ArrayList<>(List.of(
@@ -66,9 +83,10 @@ public class PreparacaoCompletaTest {
 				assertTrue(api.getOpcoesCartaSecreta().get(0).contains("1/2/3 votos"));
 				assertFalse(api.escolherCartaSecreta(-1));
 				assertFalse(api.escolherCartaSecreta(2));
-				assertEquals(i, observador.chamadas);
+				int antes = observador.chamadas;
 				assertTrue(api.escolherCartaSecreta(i % 2));
-				assertEquals(i + 1, observador.chamadas);
+				assertEquals(antes + 1, observador.chamadas);
+				if (api.isEscolhaMelhoriaInicialPendente()) assertTrue(api.escolherMelhoriaInicial(0));
 				assertEquals(i + 1 < quantidade, api.isPreparacao());
 			}
 			assertEquals(-1, api.getJogadorPreparando());
@@ -123,8 +141,11 @@ public class PreparacaoCompletaTest {
 		Partida partida = new Partida(tabuleiro, List.of(jochi, altani), componentes, new Random(1));
 		assertFalse(partida.iniciar());
 		assertEquals(5, componentes.getMercado().size());
+		assertEquals(37, componentes.melhoriasNaReserva());
+		assertEquals(0, componentes.inventarioDe(jochi).contarMelhorias(Coluna.BRANCA));
+		assertEquals(2, componentes.opcoesMelhoriaInicial(jochi).size());
+		assertTrue(componentes.escolherMelhoriaInicial(jochi, 1));
 		assertEquals(38, componentes.melhoriasNaReserva());
-		assertEquals(1, componentes.inventarioDe(jochi).contarMelhorias(Coluna.BRANCA));
 		assertEquals(0, componentes.inventarioDe(altani).contarMelhorias(Coluna.BRANCA));
 		int tesouros = 0;
 		for (Cidade cidade : tabuleiro.getCidades()) {
@@ -143,13 +164,15 @@ public class PreparacaoCompletaTest {
 		assertTrue(partida.iniciar());
 	}
 
-	/** Alternar para a demonstração limpa os dados da preparação anterior. */
-	@Test public void demonstracaoNaoHerdaComponentesDaPreparacao() {
+	/** Uma nova partida padrão substitui a preparação anterior por componentes completos. */
+	@Test public void novaPartidaUsaCadastroEmbutidoEReiniciaPreparacao() {
 		assertTrue(api.novaPartidaCompleta(List.of("Ana", "Bia"), List.of("JOCHI", "ALTANI"), cadastro()));
 		assertTrue(api.novaPartida(List.of("X", "Y"), List.of("TOLUI", "OGEDEI")));
-		assertFalse(api.isPreparacao());
-		assertEquals(-1, api.getJogadorPreparando());
-		assertTrue(api.getCartasAbertas().isEmpty());
-		assertTrue(api.getOpcoesCartaSecreta().isEmpty());
+		assertTrue(api.isPreparacao());
+		assertTrue(api.isPartidaCompleta());
+		assertEquals(0, api.getJogadorPreparando());
+		assertEquals(4, api.getCartasAbertas().size());
+		assertEquals(2, api.getOpcoesCartaSecreta().size());
+		assertEquals(java.util.Map.of("TECIDO", 2), api.getPedidoConselheiro("Conselheiro Norte"));
 	}
 }

@@ -16,6 +16,7 @@ final class Melhoria {
 		this.simbolo = simbolo;
 	}
 
+	String getId() { return "MELHORIA_" + cor.name() + "_" + simbolo.name(); }
 	Coluna getCor() { return cor; }
 	Simbolo getSimbolo() { return simbolo; }
 	TipoTesouro getTesouroVirtual() {

@@ -24,6 +24,8 @@ final class ComponentesKhan implements ComponentesPartida {
 	private final List<Carta> cartasAbertas = new ArrayList<>();
 	private final Map<Jogador, Inventario> inventarios = new HashMap<>();
 	private final Set<Jogador> escolheramCarta = new HashSet<>();
+	private final Map<Jogador, List<Melhoria>> escolhasIniciais = new HashMap<>();
+	private final Map<Jogador, Integer> linhasPremiadas = new HashMap<>();
 	private final List<Melhoria> pilhaMelhorias;
 	/** Índice zero é a peça mais à direita; espaços vagos ficam à esquerda. */
 	private final List<Melhoria> mercado = new ArrayList<>();
@@ -66,7 +68,7 @@ final class ComponentesKhan implements ComponentesPartida {
 				throw new IllegalArgumentException("Conselheiro de outro tabuleiro");
 			}
 		}
-		int necessarias = jogadores.stream().anyMatch(j -> j.getHerdeiro() == Herdeiro.JOCHI) ? 6 : 5;
+		int necessarias = jogadores.stream().anyMatch(j -> j.getHerdeiro() == Herdeiro.JOCHI) ? 7 : 5;
 		if (pilhaMelhorias.size() < necessarias) throw new IllegalArgumentException("Faltam peças para preparação de melhorias");
 		int tesourosNecessarios = 0;
 		for (Cidade cidade : tabuleiro.getCidades()) {
@@ -82,7 +84,9 @@ final class ComponentesKhan implements ComponentesPartida {
 			Inventario inventario = new Inventario();
 			inventarios.put(jogador, inventario);
 			secretas.distribuir(jogador, 2);
-			if (jogador.getHerdeiro() == Herdeiro.JOCHI) inventario.adicionarMelhoria(retirarTopoMelhoria(), Coluna.BRANCA, 0);
+			linhasPremiadas.put(jogador, jogador.getHerdeiro() == Herdeiro.JOCHI ? 1 : 0);
+			if (jogador.getHerdeiro() == Herdeiro.JOCHI) escolhasIniciais.put(jogador,
+					List.of(retirarTopoMelhoria(), retirarTopoMelhoria()));
 		}
 		reporMercado();
 		abastecerCidadesReveladas();
@@ -109,8 +113,20 @@ final class ComponentesKhan implements ComponentesPartida {
 		escolheramCarta.add(jogador);
 		return true;
 	}
+	boolean cartaEscolhida(Jogador jogador) { return escolheramCarta.contains(jogador); }
+	List<Melhoria> opcoesMelhoriaInicial(Jogador jogador) { return escolhasIniciais.getOrDefault(jogador, List.of()); }
+	boolean escolherMelhoriaInicial(Jogador jogador, int indice) {
+		List<Melhoria> opcoes = escolhasIniciais.get(jogador);
+		if (partida == null || partida.getFase() != Fase.PREPARACAO || opcoes == null || indice < 0 || indice >= opcoes.size()) return false;
+		if (!inventarioDe(jogador).adicionarMelhoria(opcoes.get(indice), Coluna.BRANCA, 0)) return false;
+		// A peça rejeitada volta ao fundo da pilha fechada, preservando as 44 peças.
+		pilhaMelhorias.add(0, opcoes.get(1 - indice));
+		escolhasIniciais.remove(jogador);
+		return true;
+	}
+
 	@Override public boolean preparacaoConcluida() {
-		return partida != null && escolheramCarta.size() == inventarios.size();
+		return partida != null && escolheramCarta.size() == inventarios.size() && escolhasIniciais.isEmpty();
 	}
 
 	@Override public EfeitosColuna efeitosDasMelhorias(Jogador jogador, Coluna coluna, int numeroTurno) {
@@ -179,21 +195,31 @@ final class ComponentesKhan implements ComponentesPartida {
 
 	/** Índice -1 compra do topo; demais índices vêm de getMercado(). */
 	boolean podeComprarMelhoria(int indice) {
-		if (!emAndamento()) return false;
+		Melhoria melhoria = consultarMelhoria(indice);
+		return melhoria != null && podeComprarMelhoria(indice, melhoria.getCor());
+	}
+	boolean podeComprarMelhoria(int indice, Coluna destino) {
+		if (!emAndamento() || destino == null) return false;
 		Melhoria melhoria = consultarMelhoria(indice);
 		Jogador jogador = partida.getJogadorDaVez();
-		return melhoria != null && inventarioDe(jogador).cabeMelhoria(melhoria.getCor())
+		return melhoria != null && (jogador.getHerdeiro() == Herdeiro.JOCHI || destino == melhoria.getCor())
+				&& inventarioDe(jogador).cabeMelhoria(destino)
 				&& jogador.contarTributo(TipoTributo.MOEDA) + partida.getTurno().getRecursoVirtual(TipoTributo.MOEDA) >= 2;
 	}
 	boolean comprarMelhoria(int indice) {
-		if (!podeComprarMelhoria(indice)) return false;
 		Melhoria melhoria = consultarMelhoria(indice);
+		return melhoria != null && comprarMelhoria(indice, melhoria.getCor());
+	}
+	boolean comprarMelhoria(int indice, Coluna destino) {
+		if (!podeComprarMelhoria(indice, destino)) return false;
+		Jogador jogador = partida.getJogadorDaVez();
+		Melhoria melhoria = retirarMelhoria(indice);
 		partida.gastarTributo(TipoTributo.MOEDA, 2);
-		retirarMelhoria(indice);
-		inventarioDe(partida.getJogadorDaVez()).adicionarMelhoria(melhoria, melhoria.getCor(), partida.getTurno().getNumero());
+		inventarioDe(jogador).adicionarMelhoria(melhoria, destino, partida.getTurno().getNumero(), jogador.getHerdeiro() == Herdeiro.JOCHI);
 		partida.concluirAcaoComplementar(false);
 		return true;
 	}
+
 	boolean podeEscolherMelhoriaGratuita(int indice) {
 		return emAndamento() && temMelhoriaPendente(partida.getJogadorDaVez()) && consultarMelhoria(indice) != null
 				&& inventarioDe(partida.getJogadorDaVez()).cabeMelhoria(Coluna.BRANCA);
@@ -202,13 +228,14 @@ final class ComponentesKhan implements ComponentesPartida {
 		if (!podeEscolherMelhoriaGratuita(indice)) return false;
 		Melhoria melhoria = retirarMelhoria(indice);
 		inventarioDe(partida.getJogadorDaVez()).adicionarMelhoria(melhoria, Coluna.BRANCA, partida.getTurno().getNumero());
+		linhasPremiadas.merge(partida.getJogadorDaVez(), 1, Integer::sum);
 		partida.concluirAcaoComplementar(false);
 		return true;
 	}
 
 	boolean temMelhoriaPendente(Jogador jogador) {
 		Inventario inventario = inventarioDe(jogador);
-		return inventario.linhasCompletas() > inventario.contarMelhorias(Coluna.BRANCA)
+		return inventario.cabeMelhoria(Coluna.BRANCA) && inventario.linhasCompletas() > linhasPremiadas.getOrDefault(jogador, 0)
 				&& (!mercado.isEmpty() || !pilhaMelhorias.isEmpty());
 	}
 	@Override public boolean temEscolhaPendente(Jogador jogador) {

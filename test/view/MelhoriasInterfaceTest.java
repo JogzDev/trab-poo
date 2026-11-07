@@ -32,7 +32,7 @@ public class MelhoriasInterfaceTest {
 		SwingUtilities.invokeAndWait(new Runnable() {
 			@Override public void run() {
 				ModelAPI api = ModelAPI.getInstance();
-				assertTrue(api.novaPartidaCompleta(List.of("Ana", "Bia"), List.of("OGEDEI", "ALTANI"), PreparacaoCompletaTest.cadastro()));
+				assertTrue(PreparacaoCompletaTest.criarSintetica(List.of("Ana", "Bia"), List.of("OGEDEI", "ALTANI")));
 				assertTrue(api.escolherCartaSecreta(0));
 				assertTrue(api.escolherCartaSecreta(0));
 				PainelMelhorias painel = new PainelMelhorias();
@@ -49,9 +49,8 @@ public class MelhoriasInterfaceTest {
 					assertEquals(4, api.getMercadoMelhorias().size());
 					assertEquals(1, api.getMelhoriasJogador(0, coluna).size());
 					assertFalse(botao(painel, "Comprar").isEnabled());
-					boolean descricao = false;
-					for (JLabel label : componentes(painel, JLabel.class)) if (label.getText().contains("próximo turno")) descricao = true;
-					assertTrue(descricao);
+					assertTrue(api.getMelhoriasJogador(0, coluna).get(0).contains("próximo turno"));
+					assertTrue(botao(painel, "Abrir cartela").isEnabled());
 				} finally { api.remove(painel); }
 			}
 		});
@@ -80,4 +79,28 @@ public class MelhoriasInterfaceTest {
 			}
 		});
 	}
+	@Test public void jochiCompraNaColunaSelecionadaPeloControle() throws Exception {
+		SwingUtilities.invokeAndWait(new Runnable() {
+			@Override public void run() {
+				ModelAPI api = ModelAPI.getInstance();
+				assertTrue(PreparacaoCompletaTest.iniciarPadrao(List.of("Ana", "Bia"), List.of("JOCHI", "ALTANI")));
+				assertTrue(api.ativarColuna("VERMELHA"));
+				PainelMelhorias painel = new PainelMelhorias();
+				try {
+					String cor = api.getMercadoMelhorias().get(0).split(":")[0];
+					String destino = cor.equals("VERDE") ? "VERMELHA" : "VERDE";
+					String id = api.getIdsMercadoMelhorias().get(0);
+					for (javax.swing.JComboBox<?> combo : componentes(painel, javax.swing.JComboBox.class)) {
+						if ("colunaCompraJochi".equals(combo.getName())) combo.setSelectedItem(destino);
+					}
+					componentes(painel, JRadioButton.class).get(0).doClick(0);
+					assertTrue(botao(painel, "Comprar").isEnabled());
+					botao(painel, "Comprar").doClick(0);
+					assertEquals(List.of(id), api.getIdsMelhoriasJogador(0, destino));
+					assertTrue(api.getIdsMelhoriasJogador(0, cor).isEmpty());
+				} finally { api.remove(painel); }
+			}
+		});
+	}
+
 }

@@ -43,7 +43,7 @@ public class AcoesInterfaceTest {
 		SwingUtilities.invokeAndWait(new Runnable() {
 			@Override public void run() {
 				ModelAPI api = ModelAPI.getInstance();
-				assertTrue(api.novaPartida(List.of("Ana", "Bia"), List.of("ALTANI", "TOLUI")));
+				assertTrue(PreparacaoCompletaTest.iniciarPadrao(List.of("Ana", "Bia"), List.of("ALTANI", "TOLUI")));
 				PainelAcoes painel = new PainelAcoes();
 				try {
 					assertFalse(botao(painel, "Pegar tributo").isEnabled());
@@ -68,7 +68,7 @@ public class AcoesInterfaceTest {
 		SwingUtilities.invokeAndWait(new Runnable() {
 			@Override public void run() {
 				ModelAPI api = ModelAPI.getInstance();
-				assertTrue(api.novaPartidaCompleta(List.of("Ana", "Bia"), List.of("OGEDEI", "ALTANI"), PreparacaoCompletaTest.cadastro()));
+				assertTrue(PreparacaoCompletaTest.criarSintetica(List.of("Ana", "Bia"), List.of("OGEDEI", "ALTANI")));
 				PainelAcoes painel = new PainelAcoes();
 				try {
 					assertFalse(botao(painel, "Ogedei").isEnabled());

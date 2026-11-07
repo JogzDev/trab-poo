@@ -5,13 +5,14 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 import org.junit.Test;
 import model.ModelAPI;
+import model.PreparacaoCompletaTest;
 
 public class RotaInterfaceTest {
 	@Test public void tracaRotaPassandoPorParadaOcupadaEExecutaNoMapa() throws Exception {
 		SwingUtilities.invokeAndWait(new Runnable() {
 			@Override public void run() {
 				ModelAPI api = ModelAPI.getInstance();
-				assertTrue(api.novaPartida(List.of("Ana", "Bia"), List.of("ALTANI", "TOLUI")));
+				assertTrue(PreparacaoCompletaTest.iniciarPadrao(List.of("Ana", "Bia"), List.of("ALTANI", "TOLUI")));
 				assertTrue(api.ativarColuna("VERDE"));
 				assertTrue(api.moverPara("Sarai Sudoeste")); assertTrue(api.terminarTurno());
 				assertTrue(api.ativarColuna("VERDE"));

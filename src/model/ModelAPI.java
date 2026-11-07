@@ -38,17 +38,12 @@ public final class ModelAPI implements ObservadoIF {
 	private String erroConfiguracao = "";
 	private boolean cartaSecretaVisivel;
 	private int jogadorCartela = -1;
+	private boolean janelaCartasAberta;
+	private boolean janelaCartelaAberta;
 
 	private ModelAPI() {
 	}
 
-	/** Componentes da demonstração reduzida; o modo completo usa ComponentesKhan. */
-	private static final class ComponentesDaTela implements ComponentesPartida {
-		@Override
-		public boolean moverKhanParaMelhorias(Partida partida) {
-			return true;
-		}
-	}
 
 	public static ModelAPI getInstance() {
 		if (instancia == null) {
@@ -88,46 +83,13 @@ public final class ModelAPI implements ObservadoIF {
 		return nomes;
 	}
 
-	/**
-	 * Cria e inicia o modo reduzido no mapa oficial. As cores são atribuídas na
-	 * ordem dos jogadores (AZUL, VERDE, VERMELHO, AMARELO, PRETO).
-	 *
-	 * @param nomes     nomes dos jogadores, na ordem de jogo (2 a 5)
-	 * @param herdeiros herdeiro de cada jogador, sem repetição ("ALTANI" ou "Altani")
-	 * @return false se a configuração for inválida; a partida anterior é mantida
-	 */
+	/** Prepara uma partida completa com o cadastro embutido; as escolhas iniciam os turnos. */
 	public boolean novaPartida(List<String> nomes, List<String> herdeiros) {
-		if (nomes == null || herdeiros == null || nomes.size() != herdeiros.size()
-				|| nomes.size() < 2 || nomes.size() > Cor.values().length) {
-			return false;
-		}
-		try {
-			List<Jogador> jogadores = new ArrayList<>();
-			for (int i = 0; i < nomes.size(); i++) {
-				Herdeiro herdeiro = herdeiro(herdeiros.get(i));
-				if (herdeiro == null) {
-					return false;
-				}
-				jogadores.add(new Jogador(nomes.get(i), Cor.values()[i], herdeiro));
-			}
-			Partida nova = new Partida(MapaOficial.criar(), jogadores, new ComponentesDaTela(), new Random());
-			if (!nova.iniciar()) {
-				return false;
-			}
-			cartaSecretaVisivel = false;
-			jogadorCartela = 0;
-			partida = nova;
-			componentesKhan = null;
-			jogadorPreparando = -1;
-		} catch (IllegalArgumentException e) {
-			return false; // nome vazio ou herdeiro repetido
-		}
-		notificar();
-		return true;
+		return novaPartidaCompleta(nomes, herdeiros, PecasDoJogo.cadastro(), new Random());
 	}
 
 	/** Cria a preparação completa sem iniciar turnos nem escolher cartas pelo jogador. */
-	public boolean novaPartidaCompleta(List<String> nomes, List<String> herdeiros, List<String> pecas) {
+	boolean novaPartidaCompleta(List<String> nomes, List<String> herdeiros, List<String> pecas) {
 		return novaPartidaCompleta(nomes, herdeiros, pecas, new Random());
 	}
 
@@ -151,6 +113,8 @@ public final class ModelAPI implements ObservadoIF {
 			ComponentesKhan componentes = ConfiguracaoPecas.criar(pecas, tabuleiro, random);
 			Partida nova = new Partida(tabuleiro, jogadores, componentes, random);
 			cartaSecretaVisivel = false;
+			janelaCartasAberta = false;
+			janelaCartelaAberta = false;
 			jogadorCartela = 0;
 			partida = nova;
 			componentesKhan = componentes;
@@ -175,7 +139,7 @@ public final class ModelAPI implements ObservadoIF {
 	/** Somente as opções do jogador que está realizando a preparação. */
 	public List<String> getOpcoesCartaSecreta() {
 		List<String> opcoes = new ArrayList<>();
-		if (isPreparacao() && componentesKhan != null && jogadorPreparando >= 0) {
+		if (isPreparacao() && componentesKhan != null && jogadorPreparando >= 0 && !componentesKhan.cartaEscolhida(jogador(jogadorPreparando))) {
 			for (Carta carta : componentesKhan.cartasDe(jogador(jogadorPreparando))) {
 				opcoes.add(carta.getNome() + ": " + carta.getObjetivo().getDescricao());
 			}
@@ -190,11 +154,33 @@ public final class ModelAPI implements ObservadoIF {
 		List<Carta> cartas = componentesKhan.cartasDe(jogador);
 		if (indice < 0 || indice >= cartas.size()
 				|| !componentesKhan.escolherCartaSecreta(jogador, cartas.get(indice))) return false;
-		jogadorPreparando++;
+		avancarPreparacao();
+		notificar();
+		return true;
+	}
+
+	private void avancarPreparacao() {
+		while (jogadorPreparando < getNumJogadores() && componentesKhan.cartaEscolhida(jogador(jogadorPreparando))
+				&& componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando)).isEmpty()) jogadorPreparando++;
 		if (jogadorPreparando == getNumJogadores()) {
 			if (!partida.iniciar()) throw new IllegalStateException("Preparação incompleta.");
 			jogadorPreparando = -1;
 		}
+	}
+	public boolean isEscolhaMelhoriaInicialPendente() {
+		return isPreparacao() && jogadorPreparando >= 0 && componentesKhan.cartaEscolhida(jogador(jogadorPreparando))
+				&& !componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando)).isEmpty();
+	}
+	public List<String> getOpcoesMelhoriaInicial() {
+		List<String> opcoes = new ArrayList<>();
+		if (isEscolhaMelhoriaInicialPendente()) for (Melhoria melhoria : componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando))) {
+			opcoes.add(melhoria.getCor().name() + ": " + melhoria.getDescricao());
+		}
+		return opcoes;
+	}
+	public boolean escolherMelhoriaInicial(int indice) {
+		if (!isEscolhaMelhoriaInicialPendente() || !componentesKhan.escolherMelhoriaInicial(jogador(jogadorPreparando), indice)) return false;
+		avancarPreparacao();
 		notificar();
 		return true;
 	}
@@ -487,6 +473,7 @@ public final class ModelAPI implements ObservadoIF {
 			return false;
 		}
 		cartaSecretaVisivel = false;
+		if (isPartidaEncerrada()) { janelaCartasAberta = false; janelaCartelaAberta = false; }
 		jogadorCartela = getJogadorDaVez();
 		notificar();
 		return true;
@@ -639,6 +626,15 @@ public final class ModelAPI implements ObservadoIF {
 		notificar();
 		return true;
 	}
+	public boolean podeComprarMelhoria(int indice, String destino) {
+		return emAndamento() && componentesKhan != null && componentesKhan.podeComprarMelhoria(indice, coluna(destino));
+	}
+	public boolean comprarMelhoria(int indice, String destino) {
+		if (!emAndamento() || componentesKhan == null || !componentesKhan.comprarMelhoria(indice, coluna(destino))) return false;
+		notificar();
+		return true;
+	}
+
 	public boolean podeEscolherMelhoriaGratuita(int indice) {
 		return emAndamento() && componentesKhan != null && componentesKhan.podeEscolherMelhoriaGratuita(indice);
 	}
@@ -806,6 +802,60 @@ public final class ModelAPI implements ObservadoIF {
 		List<Integer> indices = new ArrayList<>();
 		if (isPartidaEncerrada() && componentesKhan != null) for (Jogador jogador : componentesKhan.getVencedores()) indices.add(partida.getJogadores().indexOf(jogador));
 		return indices;
+	}
+
+	// Identificadores sem caminhos de arquivo: as imagens pertencem exclusivamente à View.
+	public List<String> getIdsCartasAbertas() {
+		List<String> ids = new ArrayList<>();
+		if (componentesKhan != null) for (Carta carta : componentesKhan.getCartasAbertas()) ids.add(carta.getId());
+		return ids;
+	}
+	public List<String> getIdsOpcoesCartaSecreta() {
+		List<String> ids = new ArrayList<>();
+		if (isPreparacao() && jogadorPreparando >= 0 && !componentesKhan.cartaEscolhida(jogador(jogadorPreparando)))
+			for (Carta carta : componentesKhan.cartasDe(jogador(jogadorPreparando))) ids.add(carta.getId());
+		return ids;
+	}
+	public List<String> getIdsOpcoesMelhoriaInicial() {
+		List<String> ids = new ArrayList<>();
+		if (isEscolhaMelhoriaInicialPendente()) for (Melhoria melhoria : componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando))) ids.add(melhoria.getId());
+		return ids;
+	}
+	public String getIdCartaSecretaAtual() {
+		return isCartaSecretaVisivel() ? componentesKhan.cartasDe(partida.getJogadorDaVez()).get(0).getId() : null;
+	}
+	public List<String> getIdsMelhoriasJogador(int indice, String nomeColuna) {
+		List<String> ids = new ArrayList<>();
+		Coluna coluna = coluna(nomeColuna);
+		if (componentesKhan != null && coluna != null) for (Melhoria melhoria : componentesKhan.inventarioDe(jogador(indice)).getMelhorias(coluna)) ids.add(melhoria.getId());
+		return ids;
+	}
+	public List<String> getIdsMercadoMelhorias() {
+		List<String> ids = new ArrayList<>();
+		if (componentesKhan != null) for (Melhoria melhoria : componentesKhan.getMercado()) ids.add(melhoria.getId());
+		return ids;
+	}
+	public boolean isJanelaCartasAberta() { return janelaCartasAberta; }
+	public boolean isJanelaCartelaAberta() { return janelaCartelaAberta; }
+	public boolean abrirJanelaCartas() {
+		if (!emAndamento() || janelaCartasAberta) return false;
+		janelaCartasAberta = true;
+		notificar(); return true;
+	}
+	public boolean fecharJanelaCartas() {
+		if (!janelaCartasAberta) return false;
+		janelaCartasAberta = false; cartaSecretaVisivel = false;
+		notificar(); return true;
+	}
+	public boolean abrirJanelaCartela() {
+		if (!emAndamento() || janelaCartelaAberta) return false;
+		janelaCartelaAberta = true;
+		notificar(); return true;
+	}
+	public boolean fecharJanelaCartela() {
+		if (!janelaCartelaAberta) return false;
+		janelaCartelaAberta = false;
+		notificar(); return true;
 	}
 
 	private Provincia provincia(String nome) {

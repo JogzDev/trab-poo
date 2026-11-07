@@ -25,8 +25,9 @@ import model.ObservadorIF;
 /** Preparação local com passagem da tela antes de revelar as duas cartas. */
 public class PainelPreparacao extends JPanel implements ObservadorIF {
 	private final JLabel jogador = new JLabel();
+	private final JLabel instrucao = new JLabel();
 	private final JButton revelar = new JButton("Estou pronto para ver minhas cartas");
-	private final JPanel opcoes = new JPanel(new GridLayout(0, 1, 8, 8));
+	private final JPanel opcoes = new JPanel(new GridLayout(1, 0, 12, 12));
 	private final JButton confirmar = new JButton("Confirmar carta secreta");
 	private final ButtonGroup grupo = new ButtonGroup();
 	private int exibido = -1;
@@ -35,14 +36,14 @@ public class PainelPreparacao extends JPanel implements ObservadorIF {
 	public PainelPreparacao() {
 		setLayout(new GridBagLayout());
 		JPanel cartela = new JPanel(new BorderLayout(16, 16));
-		cartela.setPreferredSize(new Dimension(800, 420));
+		cartela.setPreferredSize(new Dimension(900, 650));
 		cartela.setBorder(BorderFactory.createCompoundBorder(
 				BorderFactory.createLineBorder(new Color(200, 200, 200)),
 				BorderFactory.createEmptyBorder(24, 24, 24, 24)));
 		add(cartela);
 		setPreferredSize(new Dimension(850, 600));
 		JPanel topo = new JPanel(new GridLayout(0, 1, 8, 8));
-		topo.add(new JLabel("Preparação — escolha uma das duas cartas e descarte a outra."));
+		topo.add(instrucao);
 		jogador.setFont(jogador.getFont().deriveFont(Font.BOLD, 16f));
 		topo.add(jogador);
 		revelar.addActionListener(new AcaoRevelar());
@@ -70,7 +71,9 @@ public class PainelPreparacao extends JPanel implements ObservadorIF {
 	private class AcaoConfirmar implements ActionListener {
 		@Override public void actionPerformed(ActionEvent e) {
 			if (reveladas && grupo.getSelection() != null) {
-				Controlador.getInstance().escolherCartaSecreta(Integer.parseInt(grupo.getSelection().getActionCommand()));
+				int indice = Integer.parseInt(grupo.getSelection().getActionCommand());
+				if (ModelAPI.getInstance().isEscolhaMelhoriaInicialPendente()) Controlador.getInstance().escolherMelhoriaInicial(indice);
+				else Controlador.getInstance().escolherCartaSecreta(indice);
 			}
 		}
 	}
@@ -89,21 +92,29 @@ public class PainelPreparacao extends JPanel implements ObservadorIF {
 			exibido = atual;
 			reveladas = false;
 		}
-		jogador.setText("<html>" + (reveladas ? "Carta secreta de " : "Passe a tela para ")
+		jogador.setText("<html>" + (m.isEscolhaMelhoriaInicialPendente() ? "Jochi: escolha uma melhoria para a branca, " : reveladas ? "Carta secreta de " : "Passe a tela para ")
 				+ "<b>" + escapar(m.getNomeJogador(atual)) + "</b>.</html>");
+		boolean melhoria = m.isEscolhaMelhoriaInicialPendente();
+		instrucao.setText(melhoria ? "Escolha uma das duas melhorias para a coluna branca." : "Escolha uma carta secreta e descarte a outra.");
+		if (melhoria) reveladas = true;
 		revelar.setVisible(!reveladas);
+		confirmar.setText(melhoria ? "Confirmar melhoria inicial" : "Confirmar carta secreta");
 		opcoes.removeAll();
 		while (grupo.getButtonCount() > 0) grupo.remove(grupo.getElements().nextElement());
 		confirmar.setVisible(reveladas);
 		confirmar.setEnabled(false);
 		if (reveladas) {
-			List<String> cartas = m.getOpcoesCartaSecreta();
+			List<String> cartas = melhoria ? m.getOpcoesMelhoriaInicial() : m.getOpcoesCartaSecreta();
+			List<String> ids = melhoria ? m.getIdsOpcoesMelhoriaInicial() : m.getIdsOpcoesCartaSecreta();
 			for (int i = 0; i < cartas.size(); i++) {
-				JRadioButton opcao = new JRadioButton("<html><div style='width:480px'>" + escapar(cartas.get(i)) + "</div></html>");
+				JRadioButton opcao = new JRadioButton("<html><div style='width:260px'>" + escapar(cartas.get(i)) + "</div></html>");
 				opcao.setActionCommand(Integer.toString(i));
 				opcao.addActionListener(new AcaoSelecionar());
 				grupo.add(opcao);
-				opcoes.add(opcao);
+				JPanel escolha = new JPanel(new BorderLayout());
+				escolha.add(new PainelImagem(ids.get(i), 300, 390), BorderLayout.CENTER);
+				escolha.add(opcao, BorderLayout.SOUTH);
+				opcoes.add(escolha);
 			}
 		}
 		revalidate();
