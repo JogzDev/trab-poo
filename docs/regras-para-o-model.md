@@ -49,4 +49,4 @@ Coloca uma peça de ativação numa coluna e faz as ações dela em qualquer ord
 - Chagatai: 1x por turno troca 1 cavalo por 1 espada.
 - Jochi: escolhe uma entre duas melhorias sorteadas para a branca; ao comprar melhorias, pode ignorar a cor e escolher entre as três colunas coloridas, respeitando quatro espaços. A primeira linha já é premiada pela melhoria inicial (p. 20).
 - Ogedei: 1x por turno paga 1 moeda para pegar um tesouro de qualquer cidade (não o último).
-- Tolui: começa com 1 yurt em Karakorum (não conta para região); pode colocar yurts em espaços adjacentes.
+- Tolui: começa com 1 yurt em Karakorum; pode colocar yurts em espaços adjacentes. O yurt de Karakorum só ajuda no movimento e nas cartas abertas de 6 e 10 yurts (p. 20): não conta para região, rede (Viajante) nem adjacência (Bajulador, Prefeito, Cidadão).

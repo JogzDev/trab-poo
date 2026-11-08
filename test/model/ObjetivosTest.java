@@ -55,15 +55,26 @@ public class ObjetivosTest {
 		Objetivo o = new ObjetivoMapa(ObjetivoMapa.Criterio.REDE, 4, 5, 6);
 		assertEquals(1, o.votos(c.azul(), c.partida, new Inventario()));
 	}
-	/** Objetivo: adjacência não é conquista. Entrada: conquista sem yurts ao redor, depois yurts em C e K. Saída esperada: 0/3 votos. */
-	@Test public void objetivosDeAdjacenciaExcluemYurtsNoCentroDaCidade() {
+	/** Objetivo: adjacência não é conquista nem yurt de Karakorum. Entrada: conquista sem yurts ao redor; yurt em C; yurt em K. Saída esperada: Cidadão 0/1/1 voto; Prefeito sempre 0. */
+	@Test public void objetivosDeAdjacenciaExcluemCentroDaCidadeEKarakorum() {
 		PartidaTest.Cenario c = PartidaTest.padrao().iniciar();
 		Cidade cidade = c.revelada(); while (cidade.podeSerAtacada()) cidade.retirarTesouro(c.azul().getCor());
-		Objetivo o = secreta("Prefeito"); Inventario i = new Inventario();
-		assertEquals(0, o.votos(c.azul(), c.partida, i));
+		Objetivo cidadao = secreta("Cidadão"), prefeito = secreta("Prefeito"); Inventario i = new Inventario();
+		assertEquals(0, cidadao.votos(c.azul(), c.partida, i));
 		c.tabuleiro.colocarYurt(c.tabuleiro.getParada("C"), c.azul());
+		assertEquals(1, cidadao.votos(c.azul(), c.partida, i));
 		c.tabuleiro.getParada("K").colocarYurt(c.azul().getCor(), true);
-		assertEquals(3, o.votos(c.azul(), c.partida, i));
+		assertEquals(1, cidadao.votos(c.azul(), c.partida, i));
+		assertEquals(0, prefeito.votos(c.azul(), c.partida, i));
+	}
+	/** Objetivo: manual, p. 20, o yurt de Tolui em Karakorum não forma rede. Entrada: Tolui com yurts em B e E, ligadas só por K. Saída esperada: Viajante 0 voto; a carta aberta de 6 yurts conta K. */
+	@Test public void viajanteNaoUsaYurtDeToluiEmKarakorum() {
+		PartidaTest.Cenario c = new PartidaTest.Cenario(Herdeiro.TOLUI, Herdeiro.OGEDEI).iniciar();
+		assertTrue(c.tabuleiro.getParada("K").temYurtDe(c.azul().getCor()));
+		assertTrue(c.tabuleiro.colocarYurt(c.tabuleiro.getParada("B"), c.azul()));
+		assertTrue(c.tabuleiro.colocarYurt(c.tabuleiro.getParada("E"), c.azul()));
+		assertEquals(0, secreta("Viajante").votos(c.azul(), c.partida, new Inventario()));
+		assertEquals(3, new ObjetivoMapa(ObjetivoMapa.Criterio.YURTS, 3).progresso(c.azul(), c.partida, new Inventario()));
 	}
 	/** Objetivo: patamares secretos. Entrada: 0 a 10 melhorias. Saída esperada: 0/1/2/3 nos limites 4/7/10. */
 	@Test public void soldadoPontuaNosTresLimites() {
