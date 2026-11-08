@@ -47,6 +47,6 @@ Coloca uma peça de ativação numa coluna e faz as ações dela em qualquer ord
 ## Habilidades dos herdeiros (p. 20 e cartelas)
 - Altani: 2 peões; por turno só um age.
 - Chagatai: 1x por turno troca 1 cavalo por 1 espada.
-- Jochi: escolhe uma entre duas melhorias sorteadas para a branca; ao adquirir melhorias, pode ignorar a cor e escolher a coluna, respeitando quatro espaços. A primeira linha já é premiada pela melhoria inicial.
+- Jochi: escolhe uma entre duas melhorias sorteadas para a branca; ao comprar melhorias, pode ignorar a cor e escolher entre as três colunas coloridas, respeitando quatro espaços. A melhoria inicial não substitui a recompensa da primeira linha.
 - Ogedei: 1x por turno paga 1 moeda para pegar um tesouro de qualquer cidade (não o último).
 - Tolui: começa com 1 yurt em Karakorum (não conta para região); pode colocar yurts em espaços adjacentes.

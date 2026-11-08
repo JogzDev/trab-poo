@@ -73,8 +73,10 @@ peça. A validação de destino, capacidade e moedas acontece antes da compra.
 Peças adquiridas no turno atual só produzem efeitos em turnos seguintes.
 
 O número de linhas já premiadas é registrado separadamente das peças da
-branca: comprar nessa coluna não suprime a recompensa de uma linha posterior.
-A melhoria inicial já preenche a recompensa da primeira linha de Jochi.
+branca. Nenhum herdeiro compra para a branca, nem Jochi: ela só recebe as
+gratuitas das linhas completas. A melhoria inicial de Jochi não conta como
+recompensa, então a primeira linha dele também é premiada enquanto houver
+espaço na branca.
 
 ## Demais fluxos integrados
 
