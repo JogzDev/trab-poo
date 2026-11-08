@@ -51,18 +51,17 @@ public class JochiTest {
 		assertEquals(2, c.jogador().contarTributo(TipoTributo.MOEDA));
 		assertEquals(mercado, c.componentes.getMercado());
 	}
-	@Test public void compraNaBrancaNaoEliminaRecompensaDaSegundaLinha() {
+	/** Objetivo: a branca só recebe recompensas de linha. Entrada: Jochi tenta comprar para a branca. Saída esperada: recusa sem cobrar nem retirar peça. */
+	@Test public void jochiNaoCompraParaAColunaBranca() {
 		ComponentesKhanTest.Cenario c = new ComponentesKhanTest.Cenario(Herdeiro.JOCHI, 20).iniciar();
 		c.partida.receberTributoDoEstoque(TipoTributo.MOEDA, 1);
-		assertTrue(c.componentes.comprarMelhoria(0, Coluna.BRANCA));
-		for (Coluna coluna : List.of(Coluna.VERMELHA, Coluna.VERDE, Coluna.AMARELA)) {
-			ObjetivosTest.adicionar(c.inventario(), coluna, Melhoria.Simbolo.MAO);
-			ObjetivosTest.adicionar(c.inventario(), coluna, Melhoria.Simbolo.MAO);
-		}
-		assertTrue(c.componentes.temMelhoriaPendente(c.jogador()));
-		assertTrue(c.componentes.escolherMelhoriaGratuita(0));
-		assertEquals(3, c.inventario().contarMelhorias(Coluna.BRANCA));
-		assertFalse(c.componentes.temMelhoriaPendente(c.jogador()));
+		List<Melhoria> mercado = c.componentes.getMercado();
+		assertFalse(c.componentes.podeComprarMelhoria(0, Coluna.BRANCA));
+		assertFalse(c.componentes.comprarMelhoria(0, Coluna.BRANCA));
+		assertFalse(c.componentes.comprarMelhoria(-1, Coluna.BRANCA));
+		assertEquals(1, c.inventario().contarMelhorias(Coluna.BRANCA));
+		assertEquals(2, c.jogador().contarTributo(TipoTributo.MOEDA));
+		assertEquals(mercado, c.componentes.getMercado());
 	}
 	@Test public void compraCegaDeJochiRespeitaDestinoECusto() {
 		ComponentesKhanTest.Cenario c = new ComponentesKhanTest.Cenario(Herdeiro.JOCHI, 20).iniciar();

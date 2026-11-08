@@ -199,7 +199,8 @@ final class ComponentesKhan implements ComponentesPartida {
 		return melhoria != null && podeComprarMelhoria(indice, melhoria.getCor());
 	}
 	boolean podeComprarMelhoria(int indice, Coluna destino) {
-		if (!emAndamento() || destino == null) return false;
+		// A coluna branca só recebe as melhorias gratuitas das linhas completas (manual, p. 11).
+		if (!emAndamento() || destino == null || destino == Coluna.BRANCA) return false;
 		Melhoria melhoria = consultarMelhoria(indice);
 		Jogador jogador = partida.getJogadorDaVez();
 		return melhoria != null && (jogador.getHerdeiro() == Herdeiro.JOCHI || destino == melhoria.getCor())
