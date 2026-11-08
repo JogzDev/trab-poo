@@ -72,14 +72,20 @@ final class ObjetivoMapa extends Objetivo {
 		for (Cidade cidade : tabuleiro.getCidades()) if (cidade.getConquistadaPor() == jogador.getCor()) n++;
 		return n;
 	}
+	/**
+	 * O yurt de Tolui em Karakorum "apenas ajuda na sua movimentação" e nas
+	 * cartas abertas de 6 e 10 yurts (manual, p. 20). Por isso fica fora da
+	 * adjacência e das redes.
+	 */
 	private int yurtsAdjacentes(Jogador jogador, Set<Parada> paradas) {
 		int n = 0;
-		for (Parada parada : paradas) n += parada.contarYurts(jogador.getCor());
+		for (Parada parada : paradas) if (!parada.isKarakorum()) n += parada.contarYurts(jogador.getCor());
 		return n;
 	}
-	/** Conta peças, inclusive duas na mesma parada; cidade não é nó de rota. */
+	/** Conta peças, inclusive duas na mesma parada; cidade não é nó de rota; Karakorum não liga nem conta. */
 	private int maiorRede(Jogador jogador, Tabuleiro tabuleiro) {
 		Set<Parada> restantes = new HashSet<>(tabuleiro.paradasComYurtDe(jogador));
+		restantes.removeIf(Parada::isKarakorum);
 		int maior = 0;
 		while (!restantes.isEmpty()) {
 			ArrayDeque<Parada> fila = new ArrayDeque<>();
