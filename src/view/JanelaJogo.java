@@ -3,6 +3,7 @@ package view;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
+import java.awt.GraphicsEnvironment;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -53,11 +54,24 @@ public class JanelaJogo extends JFrame implements ObservadorIF {
 		Controlador.getInstance().registra(this);
 		notify(ModelAPI.getInstance());
 		pack();
-		setSize(Math.min(getWidth(), LARGURA_MAX), Math.min(getHeight(), ALTURA_MAX));
+		setSize(tamanhoQueCabe(getSize(), GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds()));
 		// setMaximumSize não impede o usuário de maximizar um JFrame; sem
 		// redimensionar, a janela nunca passa de 1400 x 1050.
 		setResizable(false);
 		setLocationRelativeTo(null);
+	}
+
+	/**
+	 * Tamanho da janela: o preferido, sem passar de 1400 x 1050 nem da área
+	 * útil da tela (num notebook de 1512 x 982, a área de melhorias no rodapé
+	 * do mapa ficava fora da tela). O mapa é quase quadrado e se ajusta ao
+	 * painel, então a largura perde o mesmo que a altura perdeu.
+	 */
+	static Dimension tamanhoQueCabe(Dimension preferido, Rectangle areaUtil) {
+		int altura = Math.min(preferido.height, Math.min(ALTURA_MAX, areaUtil.height));
+		int largura = preferido.width - (preferido.height - altura);
+		largura = Math.min(largura, Math.min(LARGURA_MAX, areaUtil.width));
+		return new Dimension(largura, altura);
 	}
 
 	private static JScrollPane rolagem(JPanel painel) {
