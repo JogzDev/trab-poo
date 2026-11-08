@@ -29,7 +29,7 @@ public class PainelMelhorias extends JPanel implements ObservadorIF {
 	private final ButtonGroup selecao = new ButtonGroup();
 	private final JButton comprar = new JButton("Comprar por 2 moedas");
 	private final JButton gratuita = new JButton("Escolher grátis para branca");
-	private final JComboBox<String> destino = new JComboBox<>(new String[] { "VERMELHA", "VERDE", "AMARELA", "BRANCA" });
+	private final JComboBox<String> destino = new JComboBox<>(new String[] { "VERMELHA", "VERDE", "AMARELA" });
 	private final JComboBox<String> jogadores = new JComboBox<>();
 	private final JButton abrirCartela = new JButton("Abrir cartela com imagens");
 	private boolean atualizando;
