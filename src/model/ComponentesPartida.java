@@ -4,8 +4,8 @@ package model;
  * Contrato entre a partida e os componentes de cartas, melhorias e tesouros.
  * ComponentesKhan implementa a parte 2. Os métodos padrão permitem continuar
  * testando isoladamente as regras das partes 1 e 3.
- * Na integração, cada jogador escolhe sua carta secreta; Jochi recebe uma
- * melhoria aleatória inicial na coluna branca.
+ * Na integração, cada jogador escolhe sua carta secreta; Jochi escolhe uma
+ * entre duas melhorias sorteadas para a coluna branca.
  */
 interface ComponentesPartida {
 	/** Valida a configuração antes de alterar os jogadores e as cidades. */

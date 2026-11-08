@@ -30,8 +30,8 @@ Total novo: **46 testes**. Com os 29 da parte 1 e 71 da parte 3:
 - Uma compra usa a moeda virtual antes da física e devolve apenas a física
   ao banco. Índice inválido, saldo insuficiente ou coluna cheia não gastam nada.
 - Comprar antes da ativação também não permite usar a melhoria no mesmo turno.
-- Completar uma linha exige escolher a melhoria branca; Jochi não recebe
-  duas vezes pela primeira linha. Esgotamento total não gera escolha impossível.
+- Completar uma linha exige escolher a melhoria branca; Jochi também ganha
+  pela primeira linha, até a branca encher. Esgotamento total não gera escolha impossível.
 - Os cinco estados do mercado (cinco a uma peça) verificam separadamente
   os ícones expostos de moeda e espada antes da reposição pelo Khan.
 - Um ataque pode escolher o tipo do tesouro. Um tipo ausente não gasta espada.

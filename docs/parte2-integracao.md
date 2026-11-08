@@ -72,7 +72,8 @@ cenários controlados, não a composição oficial das 44 peças.
   O índice zero representa a peça mais à direita. Após retirar uma peça,
   as restantes ficam juntas à direita; a compra não repõe o mercado.
 - `escolherMelhoriaGratuita(indice)`: preenche a branca ao completar uma linha
-  das três cores. Jochi já ocupa o espaço da primeira linha.
+  das três cores, enquanto houver espaço. A melhoria inicial de Jochi ocupa
+  um dos quatro espaços, mas não substitui a recompensa da primeira linha.
 - `partida.moverKhanParaMelhorias()`: entrega os tributos dos espaços
   descobertos e depois repõe até cinco melhorias. Da direita para a esquerda,
   os espaços são: sem tributo, espada, sem tributo, moeda, sem tributo (p. 9).
