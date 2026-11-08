@@ -404,18 +404,24 @@ class Tabuleiro {
 	/**
 	 * Se o peão pode TERMINAR um movimento na parada (manual, p. 7): pode
 	 * passar por parada ocupada, mas só termina nela se couber. Parada simples
-	 * não aceita peão de outro jogador; dupla aceita 2 peões; Karakorum aceita
-	 * todos. Peões do próprio jogador (Altani) nunca impedem.
+	 * não aceita peão de outro jogador (o outro peão de Altani não impede);
+	 * dupla aceita 2 peões de qualquer jogador; Karakorum aceita todos.
 	 */
 	boolean podeTerminarMovimentoEm(Peao peao, Parada destino) {
 		exigirRegistrada(destino);
+		int ocupantes = 0;
 		int ocupantesDeOutros = 0;
 		for (Peao outro : peoesEm(destino)) {
-			if (outro != peao && outro.getCor() != peao.getCor()) {
-				ocupantesDeOutros++;
+			if (outro != peao) {
+				ocupantes++;
+				if (outro.getCor() != peao.getCor()) {
+					ocupantesDeOutros++;
+				}
 			}
 		}
-		return ocupantesDeOutros < destino.getCapacidadePeoes();
+		// Na dupla "cabem 2 peões" (p. 7): o limite é físico e conta os peões de Altani.
+		int contados = destino.getTipo() == TipoParada.DUPLA ? ocupantes : ocupantesDeOutros;
+		return contados < destino.getCapacidadePeoes();
 	}
 
 	/**
