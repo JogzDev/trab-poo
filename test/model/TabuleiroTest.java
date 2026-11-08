@@ -295,6 +295,21 @@ public class TabuleiroTest {
 		assertTrue(tab.podeTerminarMovimentoEm(vermelho.getPeao(1), a));
 	}
 
+	/**
+	 * Objetivo: na parada dupla cabem só 2 peões, mesmo que um deles seja de
+	 * Altani (manual, p. 7).
+	 * Entrada: peão 1 de Altani (vermelho) e peão azul na dupla C; peão 2 de
+	 * Altani quer terminar em C.
+	 * Saída esperada: recusado; com C vazia de outros, os dois de Altani cabem.
+	 */
+	@Test
+	public void duplaComportaDoisPeoesMesmoDeAltani() {
+		tab.posicionarPeao(vermelho.getPeao(0), c);
+		assertTrue(tab.podeTerminarMovimentoEm(vermelho.getPeao(1), c));
+		tab.posicionarPeao(azul.getPeao(0), c);
+		assertFalse(tab.podeTerminarMovimentoEm(vermelho.getPeao(1), c));
+	}
+
 	// --------------------------------------------------------- cidades/províncias
 
 	/**
