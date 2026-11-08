@@ -63,6 +63,16 @@ public class JochiTest {
 		assertEquals(2, c.jogador().contarTributo(TipoTributo.MOEDA));
 		assertEquals(mercado, c.componentes.getMercado());
 	}
+	/** Objetivo: cada linha completa premia Jochi até a branca encher. Entrada: quatro linhas completas. Saída esperada: três gratuitas, pois a inicial ocupa um dos quatro espaços. */
+	@Test public void linhasPremiamJochiAteABrancaEncher() {
+		ComponentesKhanTest.Cenario c = new ComponentesKhanTest.Cenario(Herdeiro.JOCHI, 20).iniciar();
+		for (int linha = 1; linha <= 4; linha++) {
+			for (Coluna coluna : List.of(Coluna.VERMELHA, Coluna.VERDE, Coluna.AMARELA)) ObjetivosTest.adicionar(c.inventario(), coluna, Melhoria.Simbolo.MAO);
+			if (linha < 4) assertTrue(c.componentes.escolherMelhoriaGratuita(0));
+		}
+		assertEquals(4, c.inventario().contarMelhorias(Coluna.BRANCA));
+		assertFalse(c.componentes.temMelhoriaPendente(c.jogador()));
+	}
 	@Test public void compraCegaDeJochiRespeitaDestinoECusto() {
 		ComponentesKhanTest.Cenario c = new ComponentesKhanTest.Cenario(Herdeiro.JOCHI, 20).iniciar();
 		c.partida.receberTributoDoEstoque(TipoTributo.MOEDA, 1);
