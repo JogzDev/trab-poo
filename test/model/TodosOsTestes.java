@@ -29,6 +29,7 @@ import org.junit.runners.Suite;
 	EncerramentoModelAPITest.class,
 	JochiTest.class,
 	PecasDoJogoTest.class,
+	RegrasEmPartidasAleatoriasTest.class,
 	view.PreparacaoInterfaceTest.class,
 	view.AcoesInterfaceTest.class,
 	view.MelhoriasInterfaceTest.class,
