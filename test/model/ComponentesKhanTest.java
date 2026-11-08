@@ -77,16 +77,14 @@ public class ComponentesKhanTest {
 		assertFalse(c.componentes.temEscolhaPendente(c.jogador()));
 		assertTrue(c.partida.terminarTurno());
 	}
-	/** Objetivo: a melhoria inicial de Jochi não substitui a recompensa de linha. Entrada: melhoria inicial e primeira linha. Saída esperada: uma escolha gratuita para a branca. */
-	@Test public void jochiRecebeMelhoriaInicialEAindaGanhaAPrimeiraLinha() {
+	/** Objetivo: Jochi não ganha duas vezes a primeira branca. Entrada: melhoria inicial e primeira linha. Saída esperada: nenhuma escolha. */
+	@Test public void jochiRecebeMelhoriaAleatoriaENaoDuplicaPrimeiraLinha() {
 		Cenario c = new Cenario(Herdeiro.JOCHI, 20).iniciar();
 		assertEquals(1, c.inventario().contarMelhorias(Coluna.BRANCA));
 		assertEquals(14, c.componentes.melhoriasNaReserva());
 		for (Coluna coluna : new Coluna[] { Coluna.VERMELHA, Coluna.VERDE, Coluna.AMARELA }) ObjetivosTest.adicionar(c.inventario(), coluna, Melhoria.Simbolo.MAO);
-		assertTrue(c.componentes.temEscolhaPendente(c.jogador()));
-		assertTrue(c.componentes.escolherMelhoriaGratuita(0));
-		assertEquals(2, c.inventario().contarMelhorias(Coluna.BRANCA));
 		assertFalse(c.componentes.temEscolhaPendente(c.jogador()));
+		assertFalse(c.componentes.escolherMelhoriaGratuita(0));
 	}
 	/** Objetivo: esgotamento não bloqueia turno. Entrada: última compra fecha linha sem peças restantes. Saída esperada: sem escolha impossível. */
 	@Test public void reservaEsgotadaNaoBloqueiaRecompensaImpossivel() {

@@ -74,9 +74,8 @@ Peças adquiridas no turno atual só produzem efeitos em turnos seguintes.
 
 O número de linhas já premiadas é registrado separadamente das peças da
 branca. Nenhum herdeiro compra para a branca, nem Jochi: ela só recebe as
-gratuitas das linhas completas. A melhoria inicial de Jochi não conta como
-recompensa, então a primeira linha dele também é premiada enquanto houver
-espaço na branca.
+gratuitas das linhas completas. A melhoria inicial de Jochi ocupa o espaço
+da primeira linha, que por isso não premia de novo (manual, p. 20).
 
 ## Demais fluxos integrados
 
