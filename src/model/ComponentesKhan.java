@@ -84,8 +84,8 @@ final class ComponentesKhan implements ComponentesPartida {
 			Inventario inventario = new Inventario();
 			inventarios.put(jogador, inventario);
 			secretas.distribuir(jogador, 2);
-			// A melhoria inicial de Jochi não conta como recompensa de linha (manual, p. 11).
-			linhasPremiadas.put(jogador, 0);
+			// Manual, p. 20: a melhoria inicial de Jochi ocupa o espaço da 1ª linha, que não premia de novo.
+			linhasPremiadas.put(jogador, jogador.getHerdeiro() == Herdeiro.JOCHI ? 1 : 0);
 			if (jogador.getHerdeiro() == Herdeiro.JOCHI) escolhasIniciais.put(jogador,
 					List.of(retirarTopoMelhoria(), retirarTopoMelhoria()));
 		}
